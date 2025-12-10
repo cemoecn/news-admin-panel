@@ -20,13 +20,12 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             padding: 40px 20px;
         }
 
         header {
-            text-align: center;
             margin-bottom: 40px;
             display: flex;
             justify-content: space-between;
@@ -64,6 +63,46 @@
 
         .btn-logout:hover {
             background: rgba(239, 68, 68, 0.3);
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 6px;
+            border-radius: 12px;
+            width: fit-content;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 0.95rem;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+        }
+
+        .tab-btn:hover:not(.active) {
+            color: #fff;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
         }
 
         /* Auth Screen */
@@ -156,6 +195,15 @@
             margin-bottom: 20px;
         }
 
+        .form-row {
+            display: flex;
+            gap: 16px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
         label {
             display: block;
             color: #aaa;
@@ -175,6 +223,12 @@
             color: #fff;
             font-size: 1rem;
             transition: all 0.3s ease;
+        }
+
+        input[type="color"] {
+            padding: 8px;
+            height: 50px;
+            cursor: pointer;
         }
 
         input:focus,
@@ -252,11 +306,14 @@
             transform: none;
         }
 
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 0.85rem;
+        }
+
         .btn-edit {
             background: rgba(102, 126, 234, 0.2);
             color: #667eea;
-            padding: 8px 16px;
-            font-size: 0.85rem;
         }
 
         .btn-edit:hover {
@@ -266,38 +323,49 @@
         .btn-danger {
             background: rgba(239, 68, 68, 0.2);
             color: #ef4444;
-            padding: 8px 16px;
-            font-size: 0.85rem;
         }
 
         .btn-danger:hover {
             background: rgba(239, 68, 68, 0.3);
         }
 
-        .article-actions {
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .article-actions,
+        .category-actions {
             display: flex;
             gap: 8px;
             flex-shrink: 0;
         }
 
-        .articles-list {
+        .articles-list,
+        .categories-list {
             max-height: 600px;
             overflow-y: auto;
         }
 
-        .article-item {
+        .article-item,
+        .category-item {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 12px;
             padding: 16px;
             margin-bottom: 12px;
             display: flex;
             gap: 16px;
-            align-items: flex-start;
+            align-items: center;
             border: 1px solid rgba(255, 255, 255, 0.08);
             transition: all 0.3s ease;
         }
 
-        .article-item:hover {
+        .article-item:hover,
+        .category-item:hover {
             background: rgba(255, 255, 255, 0.08);
         }
 
@@ -309,12 +377,14 @@
             flex-shrink: 0;
         }
 
-        .article-info {
+        .article-info,
+        .category-info {
             flex: 1;
             min-width: 0;
         }
 
-        .article-title {
+        .article-title,
+        .category-name {
             font-size: 0.95rem;
             font-weight: 600;
             margin-bottom: 6px;
@@ -331,11 +401,21 @@
         }
 
         .article-category {
-            background: rgba(102, 126, 234, 0.2);
-            color: #667eea;
             padding: 2px 8px;
             border-radius: 4px;
             font-size: 0.75rem;
+        }
+
+        .category-color {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            flex-shrink: 0;
+        }
+
+        .category-article-count {
+            color: #888;
+            font-size: 0.85rem;
         }
 
         /* Modal */
@@ -415,15 +495,6 @@
 
         .modal-actions .btn {
             flex: 1;
-        }
-
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
-        }
-
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.15);
         }
 
         .toast {
@@ -563,75 +634,114 @@
             </div>
         </header>
 
-        <div class="main-grid">
-            <!-- Create Article Form -->
-            <div class="card">
-                <h2>Neuer Artikel</h2>
-                <form id="articleForm">
-                    <div class="form-group">
-                        <label for="title">Titel *</label>
-                        <input type="text" id="title" placeholder="Artikeltitel eingeben..." required>
-                    </div>
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('articles')">📄 Artikel</button>
+            <button class="tab-btn" onclick="switchTab('categories')">🏷️ Kategorien</button>
+        </div>
 
-                    <div class="form-group">
-                        <label for="category">Kategorie *</label>
-                        <select id="category" required>
-                            <option value="Tech">Tech</option>
-                            <option value="Politik">Politik</option>
-                            <option value="Wirtschaft">Wirtschaft</option>
-                            <option value="Sport">Sport</option>
-                            <option value="Unterhaltung">Unterhaltung</option>
-                            <option value="Wissenschaft">Wissenschaft</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="summary">Zusammenfassung *</label>
-                        <textarea id="summary" placeholder="Kurze Zusammenfassung des Artikels..." required></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="content">Artikelinhalt *</label>
-                        <textarea id="content" class="content-area"
-                            placeholder="Den vollständigen Artikeltext hier einfügen..." required></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="imageUrl">Bild-URL *</label>
-                        <input type="url" id="imageUrl" placeholder="https://images.unsplash.com/..." required>
-                        <div class="image-preview" id="imagePreview">
-                            Bild-Vorschau
+        <!-- Articles Tab -->
+        <div id="articlesTab" class="tab-content active">
+            <div class="main-grid">
+                <!-- Create Article Form -->
+                <div class="card">
+                    <h2>Neuer Artikel</h2>
+                    <form id="articleForm">
+                        <div class="form-group">
+                            <label for="title">Titel *</label>
+                            <input type="text" id="title" placeholder="Artikeltitel eingeben..." required>
                         </div>
-                    </div>
 
-                    <button type="submit" class="btn btn-primary" id="submitBtn">
-                        <span>✨</span> Artikel veröffentlichen
-                    </button>
-                </form>
-            </div>
+                        <div class="form-group">
+                            <label for="category">Kategorie *</label>
+                            <select id="category" required></select>
+                        </div>
 
-            <!-- Articles List -->
-            <div class="card">
-                <h2>Veröffentlichte Artikel</h2>
+                        <div class="form-group">
+                            <label for="summary">Zusammenfassung *</label>
+                            <textarea id="summary" placeholder="Kurze Zusammenfassung des Artikels..."
+                                required></textarea>
+                        </div>
 
-                <div class="stats">
-                    <div class="stat-box">
-                        <div class="stat-number" id="articleCount">-</div>
-                        <div class="stat-label">Artikel</div>
-                    </div>
+                        <div class="form-group">
+                            <label for="content">Artikelinhalt *</label>
+                            <textarea id="content" class="content-area"
+                                placeholder="Den vollständigen Artikeltext hier einfügen..." required></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="imageUrl">Bild-URL *</label>
+                            <input type="url" id="imageUrl" placeholder="https://images.unsplash.com/..." required>
+                            <div class="image-preview" id="imagePreview">Bild-Vorschau</div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            <span>✨</span> Artikel veröffentlichen
+                        </button>
+                    </form>
                 </div>
 
-                <div class="articles-list" id="articlesList">
-                    <div class="loading">
-                        <div class="spinner"></div>
-                        Artikel werden geladen...
+                <!-- Articles List -->
+                <div class="card">
+                    <h2>Veröffentlichte Artikel</h2>
+                    <div class="stats">
+                        <div class="stat-box">
+                            <div class="stat-number" id="articleCount">-</div>
+                            <div class="stat-label">Artikel</div>
+                        </div>
+                    </div>
+                    <div class="articles-list" id="articlesList">
+                        <div class="loading">
+                            <div class="spinner"></div>Artikel werden geladen...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Categories Tab -->
+        <div id="categoriesTab" class="tab-content">
+            <div class="main-grid">
+                <!-- Create Category Form -->
+                <div class="card">
+                    <h2>Neue Kategorie</h2>
+                    <form id="categoryForm">
+                        <div class="form-group">
+                            <label for="categoryName">Name *</label>
+                            <input type="text" id="categoryName" placeholder="z.B. Gaming, Reisen..." required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="categoryColor">Farbe *</label>
+                            <input type="color" id="categoryColor" value="#667eea" required>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" id="categorySubmitBtn">
+                            <span>➕</span> Kategorie erstellen
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Categories List -->
+                <div class="card">
+                    <h2>Alle Kategorien</h2>
+                    <div class="stats">
+                        <div class="stat-box">
+                            <div class="stat-number" id="categoryCount">-</div>
+                            <div class="stat-label">Kategorien</div>
+                        </div>
+                    </div>
+                    <div class="categories-list" id="categoriesList">
+                        <div class="loading">
+                            <div class="spinner"></div>Kategorien werden geladen...
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Edit Modal -->
+    <!-- Edit Article Modal -->
     <div class="modal-overlay" id="editModal">
         <div class="modal">
             <div class="modal-header">
@@ -644,42 +754,52 @@
                     <label for="editTitle">Titel *</label>
                     <input type="text" id="editTitle" required>
                 </div>
-
                 <div class="form-group">
                     <label for="editCategory">Kategorie *</label>
-                    <select id="editCategory" required>
-                        <option value="Tech">Tech</option>
-                        <option value="Politik">Politik</option>
-                        <option value="Wirtschaft">Wirtschaft</option>
-                        <option value="Sport">Sport</option>
-                        <option value="Unterhaltung">Unterhaltung</option>
-                        <option value="Wissenschaft">Wissenschaft</option>
-                    </select>
+                    <select id="editCategory" required></select>
                 </div>
-
                 <div class="form-group">
                     <label for="editSummary">Zusammenfassung *</label>
                     <textarea id="editSummary" required></textarea>
                 </div>
-
                 <div class="form-group">
                     <label for="editContent">Artikelinhalt *</label>
                     <textarea id="editContent" class="content-area" required></textarea>
                 </div>
-
                 <div class="form-group">
                     <label for="editImageUrl">Bild-URL *</label>
                     <input type="url" id="editImageUrl" required>
-                    <div class="image-preview" id="editImagePreview">
-                        Bild-Vorschau
-                    </div>
+                    <div class="image-preview" id="editImagePreview">Bild-Vorschau</div>
                 </div>
-
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Abbrechen</button>
-                    <button type="submit" class="btn btn-primary" id="editSubmitBtn">
-                        💾 Speichern
-                    </button>
+                    <button type="submit" class="btn btn-primary" id="editSubmitBtn">💾 Speichern</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Category Modal -->
+    <div class="modal-overlay" id="editCategoryModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>✏️ Kategorie bearbeiten</h2>
+                <button class="modal-close" onclick="closeEditCategoryModal()">&times;</button>
+            </div>
+            <form id="editCategoryForm">
+                <input type="hidden" id="editCategoryId">
+                <div class="form-group">
+                    <label for="editCategoryName">Name *</label>
+                    <input type="text" id="editCategoryName" required>
+                </div>
+                <div class="form-group">
+                    <label for="editCategoryColor">Farbe *</label>
+                    <input type="color" id="editCategoryColor" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary"
+                        onclick="closeEditCategoryModal()">Abbrechen</button>
+                    <button type="submit" class="btn btn-primary" id="editCategorySubmitBtn">💾 Speichern</button>
                 </div>
             </form>
         </div>
@@ -695,41 +815,38 @@
 
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+        let categories = [];
+        let authMode = 'login';
+
         // DOM Elements
         const authScreen = document.getElementById('authScreen');
         const mainApp = document.getElementById('mainApp');
-        const authForm = document.getElementById('authForm');
-        const authBtn = document.getElementById('authBtn');
-        const authError = document.getElementById('authError');
-        const userEmailEl = document.getElementById('userEmail');
-        const form = document.getElementById('articleForm');
-        const submitBtn = document.getElementById('submitBtn');
-        const articlesList = document.getElementById('articlesList');
-        const articleCount = document.getElementById('articleCount');
-        const imageUrlInput = document.getElementById('imageUrl');
-        const imagePreview = document.getElementById('imagePreview');
         const toast = document.getElementById('toast');
-        const editModal = document.getElementById('editModal');
-        const editForm = document.getElementById('editForm');
-        const editImageUrlInput = document.getElementById('editImageUrl');
-        const editImagePreview = document.getElementById('editImagePreview');
 
-        let authMode = 'login';
+        // Tab Switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tabName + 'Tab').classList.add('active');
+        }
 
-        // Switch Auth Tab
+        // Auth Tab Switch
         function switchAuthTab(mode) {
             authMode = mode;
             document.querySelectorAll('.auth-tab').forEach(tab => tab.classList.remove('active'));
             event.target.classList.add('active');
-            authBtn.textContent = mode === 'login' ? 'Anmelden' : 'Registrieren';
-            authError.classList.add('hidden');
+            document.getElementById('authBtn').textContent = mode === 'login' ? 'Anmelden' : 'Registrieren';
+            document.getElementById('authError').classList.add('hidden');
         }
 
-        // Auth Form Submit
-        authForm.addEventListener('submit', async (e) => {
+        // Auth Form
+        document.getElementById('authForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('authEmail').value;
             const password = document.getElementById('authPassword').value;
+            const authBtn = document.getElementById('authBtn');
+            const authError = document.getElementById('authError');
 
             authBtn.disabled = true;
             authBtn.innerHTML = '<div class="spinner" style="margin:0;width:20px;height:20px"></div>';
@@ -742,16 +859,12 @@
                 } else {
                     result = await supabase.auth.signUp({ email, password });
                 }
-
-                if (result.error) {
-                    throw result.error;
-                }
-
+                if (result.error) throw result.error;
                 if (authMode === 'register' && result.data.user && !result.data.session) {
-                    showToast('Bestätigungs-E-Mail gesendet! Bitte prüfe dein Postfach.', 'success');
+                    showToast('Bestätigungs-E-Mail gesendet!', 'success');
                 }
             } catch (error) {
-                authError.textContent = error.message || 'Ein Fehler ist aufgetreten';
+                authError.textContent = error.message;
                 authError.classList.remove('hidden');
             } finally {
                 authBtn.disabled = false;
@@ -764,12 +877,13 @@
             await supabase.auth.signOut();
         }
 
-        // Check Auth State
+        // Auth State
         supabase.auth.onAuthStateChange((event, session) => {
             if (session) {
                 authScreen.classList.add('hidden');
                 mainApp.classList.remove('hidden');
-                userEmailEl.textContent = session.user.email;
+                document.getElementById('userEmail').textContent = session.user.email;
+                loadCategories();
                 loadArticles();
             } else {
                 authScreen.classList.remove('hidden');
@@ -777,36 +891,161 @@
             }
         });
 
-        // Image Preview for create form
-        imageUrlInput.addEventListener('input', () => {
-            const url = imageUrlInput.value.trim();
-            if (url) {
-                imagePreview.innerHTML = `<img src="${url}" onerror="this.parentElement.innerHTML='Bild konnte nicht geladen werden'">`;
-            } else {
-                imagePreview.innerHTML = 'Bild-Vorschau';
-            }
-        });
-
-        // Image Preview for edit form
-        editImageUrlInput.addEventListener('input', () => {
-            const url = editImageUrlInput.value.trim();
-            if (url) {
-                editImagePreview.innerHTML = `<img src="${url}" onerror="this.parentElement.innerHTML='Bild konnte nicht geladen werden'">`;
-            } else {
-                editImagePreview.innerHTML = 'Bild-Vorschau';
-            }
-        });
-
         // Show Toast
         function showToast(message, type = 'success') {
             toast.textContent = message;
             toast.className = `toast ${type} show`;
-            setTimeout(() => {
-                toast.className = 'toast';
-            }, 3000);
+            setTimeout(() => { toast.className = 'toast'; }, 3000);
         }
 
-        // Load Articles
+        // ========== CATEGORIES ==========
+
+        async function loadCategories() {
+            try {
+                const { data, error } = await supabase
+                    .from('categories')
+                    .select('*')
+                    .order('name');
+
+                if (error) throw error;
+                categories = data || [];
+                document.getElementById('categoryCount').textContent = categories.length;
+                updateCategorySelects();
+                renderCategories();
+            } catch (error) {
+                console.error('Error loading categories:', error);
+                // Fallback to default categories if table doesn't exist
+                categories = [
+                    { id: 'default-1', name: 'Tech', color: '#667eea' },
+                    { id: 'default-2', name: 'Politik', color: '#ef4444' },
+                    { id: 'default-3', name: 'Wirtschaft', color: '#10b981' },
+                    { id: 'default-4', name: 'Sport', color: '#f59e0b' },
+                    { id: 'default-5', name: 'Unterhaltung', color: '#ec4899' },
+                    { id: 'default-6', name: 'Wissenschaft', color: '#8b5cf6' }
+                ];
+                document.getElementById('categoryCount').textContent = categories.length;
+                updateCategorySelects();
+                renderCategories();
+            }
+        }
+
+        function updateCategorySelects() {
+            const html = categories.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+            document.getElementById('category').innerHTML = html;
+            document.getElementById('editCategory').innerHTML = html;
+        }
+
+        function renderCategories() {
+            const list = document.getElementById('categoriesList');
+            if (categories.length === 0) {
+                list.innerHTML = '<div class="empty-state">Keine Kategorien vorhanden</div>';
+                return;
+            }
+            list.innerHTML = categories.map(cat => `
+                <div class="category-item">
+                    <div class="category-color" style="background: ${cat.color}"></div>
+                    <div class="category-info">
+                        <div class="category-name">${cat.name}</div>
+                    </div>
+                    <div class="category-actions">
+                        <button class="btn btn-sm btn-edit" onclick="openEditCategoryModal('${cat.id}')">✏️</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteCategory('${cat.id}')">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Create Category
+        document.getElementById('categoryForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('categoryName').value.trim();
+            const color = document.getElementById('categoryColor').value;
+            const btn = document.getElementById('categorySubmitBtn');
+
+            btn.disabled = true;
+            btn.innerHTML = '<div class="spinner" style="margin:0"></div>';
+
+            try {
+                const { error } = await supabase.from('categories').insert({ name, color });
+                if (error) throw error;
+                showToast('✅ Kategorie erstellt!');
+                document.getElementById('categoryForm').reset();
+                loadCategories();
+            } catch (error) {
+                showToast('Fehler: ' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<span>➕</span> Kategorie erstellen';
+            }
+        });
+
+        // Edit Category Modal
+        function openEditCategoryModal(id) {
+            const cat = categories.find(c => c.id === id);
+            if (!cat) return;
+            document.getElementById('editCategoryId').value = cat.id;
+            document.getElementById('editCategoryName').value = cat.name;
+            document.getElementById('editCategoryColor').value = cat.color;
+            document.getElementById('editCategoryModal').classList.add('show');
+        }
+
+        function closeEditCategoryModal() {
+            document.getElementById('editCategoryModal').classList.remove('show');
+        }
+
+        document.getElementById('editCategoryForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('editCategoryId').value;
+            const name = document.getElementById('editCategoryName').value.trim();
+            const color = document.getElementById('editCategoryColor').value;
+            const btn = document.getElementById('editCategorySubmitBtn');
+
+            btn.disabled = true;
+            btn.innerHTML = '<div class="spinner" style="margin:0"></div>';
+
+            try {
+                const { error } = await supabase.from('categories').update({ name, color }).eq('id', id);
+                if (error) throw error;
+                showToast('✅ Kategorie aktualisiert!');
+                closeEditCategoryModal();
+                loadCategories();
+            } catch (error) {
+                showToast('Fehler: ' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '💾 Speichern';
+            }
+        });
+
+        async function deleteCategory(id) {
+            if (!confirm('Kategorie wirklich löschen?')) return;
+            try {
+                const { error } = await supabase.from('categories').delete().eq('id', id);
+                if (error) throw error;
+                showToast('Kategorie gelöscht');
+                loadCategories();
+            } catch (error) {
+                showToast('Fehler: ' + error.message, 'error');
+            }
+        }
+
+        // ========== ARTICLES ==========
+
+        // Image Preview
+        document.getElementById('imageUrl').addEventListener('input', (e) => {
+            const url = e.target.value.trim();
+            document.getElementById('imagePreview').innerHTML = url
+                ? `<img src="${url}" onerror="this.parentElement.innerHTML='Fehler'">`
+                : 'Bild-Vorschau';
+        });
+
+        document.getElementById('editImageUrl').addEventListener('input', (e) => {
+            const url = e.target.value.trim();
+            document.getElementById('editImagePreview').innerHTML = url
+                ? `<img src="${url}" onerror="this.parentElement.innerHTML='Fehler'">`
+                : 'Bild-Vorschau';
+        });
+
         async function loadArticles() {
             try {
                 const { data: articles, error } = await supabase
@@ -816,189 +1055,148 @@
                     .order('created_at', { ascending: false });
 
                 if (error) throw error;
-
-                articleCount.textContent = articles.length;
+                document.getElementById('articleCount').textContent = articles.length;
 
                 if (articles.length === 0) {
-                    articlesList.innerHTML = '<div class="empty-state">Noch keine Artikel vorhanden</div>';
+                    document.getElementById('articlesList').innerHTML = '<div class="empty-state">Keine Artikel vorhanden</div>';
                     return;
                 }
 
-                articlesList.innerHTML = articles.map(article => `
-                    <div class="article-item">
-                        <img src="${article.image_url}" alt="" class="article-thumb" onerror="this.style.display='none'">
-                        <div class="article-info">
-                            <div class="article-title">${article.title}</div>
-                            <div class="article-meta">
-                                <span class="article-category">${article.category}</span>
-                                <span>${new Date(article.created_at).toLocaleDateString('de-DE')}</span>
+                document.getElementById('articlesList').innerHTML = articles.map(article => {
+                    const cat = categories.find(c => c.name === article.category);
+                    const color = cat ? cat.color : '#667eea';
+                    return `
+                        <div class="article-item">
+                            <img src="${article.image_url}" alt="" class="article-thumb" onerror="this.style.display='none'">
+                            <div class="article-info">
+                                <div class="article-title">${article.title}</div>
+                                <div class="article-meta">
+                                    <span class="article-category" style="background: ${color}20; color: ${color}">${article.category}</span>
+                                    <span>${new Date(article.created_at).toLocaleDateString('de-DE')}</span>
+                                </div>
+                            </div>
+                            <div class="article-actions">
+                                <button class="btn btn-sm btn-edit" onclick="openEditModal('${article.id}')">✏️</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteArticle('${article.id}')">🗑️</button>
                             </div>
                         </div>
-                        <div class="article-actions">
-                            <button class="btn btn-edit" onclick="openEditModal('${article.id}')">✏️</button>
-                            <button class="btn btn-danger" onclick="deleteArticle('${article.id}')">🗑️</button>
-                        </div>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
             } catch (error) {
-                console.error('Error loading articles:', error);
-                articlesList.innerHTML = '<div class="empty-state">Fehler beim Laden</div>';
+                console.error('Error:', error);
+                document.getElementById('articlesList').innerHTML = '<div class="empty-state">Fehler beim Laden</div>';
             }
         }
 
-        // Open Edit Modal
+        // Create Article
+        document.getElementById('articleForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = document.getElementById('title').value.trim();
+            const category = document.getElementById('category').value;
+            const summary = document.getElementById('summary').value.trim();
+            const content = document.getElementById('content').value.trim();
+            const imageUrl = document.getElementById('imageUrl').value.trim();
+            const readTime = `${Math.ceil(content.split(/\s+/).length / 200)} min read`;
+            const btn = document.getElementById('submitBtn');
+
+            btn.disabled = true;
+            btn.innerHTML = '<div class="spinner" style="margin:0"></div> Wird gespeichert...';
+
+            try {
+                const { error } = await supabase.from('articles').insert({
+                    title, category, summary, content,
+                    image_url: imageUrl, read_time: readTime,
+                    status: 'published', ai_processed: false,
+                    timestamp: new Date().toISOString()
+                });
+                if (error) throw error;
+                showToast('🎉 Artikel veröffentlicht!');
+                document.getElementById('articleForm').reset();
+                document.getElementById('imagePreview').innerHTML = 'Bild-Vorschau';
+                loadArticles();
+            } catch (error) {
+                showToast('Fehler: ' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<span>✨</span> Artikel veröffentlichen';
+            }
+        });
+
+        // Edit Article Modal
         async function openEditModal(id) {
             try {
-                const { data: article, error } = await supabase
-                    .from('articles')
-                    .select('*')
-                    .eq('id', id)
-                    .single();
-
+                const { data: article, error } = await supabase.from('articles').select('*').eq('id', id).single();
                 if (error) throw error;
-
                 document.getElementById('editId').value = article.id;
                 document.getElementById('editTitle').value = article.title;
                 document.getElementById('editCategory').value = article.category;
                 document.getElementById('editSummary').value = article.summary;
                 document.getElementById('editContent').value = article.content;
                 document.getElementById('editImageUrl').value = article.image_url;
-                editImagePreview.innerHTML = `<img src="${article.image_url}" onerror="this.parentElement.innerHTML='Bild konnte nicht geladen werden'">`;
-
-                editModal.classList.add('show');
+                document.getElementById('editImagePreview').innerHTML = `<img src="${article.image_url}">`;
+                document.getElementById('editModal').classList.add('show');
             } catch (error) {
-                console.error('Error loading article:', error);
-                showToast('Fehler beim Laden des Artikels', 'error');
+                showToast('Fehler beim Laden', 'error');
             }
         }
 
-        // Close Edit Modal
         function closeEditModal() {
-            editModal.classList.remove('show');
+            document.getElementById('editModal').classList.remove('show');
         }
 
-        // Edit Form Submit
-        editForm.addEventListener('submit', async (e) => {
+        document.getElementById('editForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-
             const id = document.getElementById('editId').value;
             const title = document.getElementById('editTitle').value.trim();
             const category = document.getElementById('editCategory').value;
             const summary = document.getElementById('editSummary').value.trim();
             const content = document.getElementById('editContent').value.trim();
             const imageUrl = document.getElementById('editImageUrl').value.trim();
+            const readTime = `${Math.ceil(content.split(/\s+/).length / 200)} min read`;
+            const btn = document.getElementById('editSubmitBtn');
 
-            const wordCount = content.split(/\s+/).length;
-            const readTime = `${Math.ceil(wordCount / 200)} min read`;
-
-            const editSubmitBtn = document.getElementById('editSubmitBtn');
-            editSubmitBtn.disabled = true;
-            editSubmitBtn.innerHTML = '<div class="spinner" style="margin:0"></div> Wird gespeichert...';
+            btn.disabled = true;
+            btn.innerHTML = '<div class="spinner" style="margin:0"></div>';
 
             try {
-                const { error } = await supabase
-                    .from('articles')
-                    .update({
-                        title,
-                        category,
-                        summary,
-                        content,
-                        image_url: imageUrl,
-                        read_time: readTime
-                    })
+                const { error } = await supabase.from('articles')
+                    .update({ title, category, summary, content, image_url: imageUrl, read_time: readTime })
                     .eq('id', id);
-
                 if (error) throw error;
-
-                showToast('✅ Artikel erfolgreich aktualisiert!');
+                showToast('✅ Artikel aktualisiert!');
                 closeEditModal();
                 loadArticles();
             } catch (error) {
-                console.error('Error updating article:', error);
                 showToast('Fehler: ' + error.message, 'error');
             } finally {
-                editSubmitBtn.disabled = false;
-                editSubmitBtn.innerHTML = '💾 Speichern';
+                btn.disabled = false;
+                btn.innerHTML = '💾 Speichern';
             }
         });
 
-        // Create Article
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const title = document.getElementById('title').value.trim();
-            const category = document.getElementById('category').value;
-            const summary = document.getElementById('summary').value.trim();
-            const content = document.getElementById('content').value.trim();
-            const imageUrl = document.getElementById('imageUrl').value.trim();
-
-            const wordCount = content.split(/\s+/).length;
-            const readTime = `${Math.ceil(wordCount / 200)} min read`;
-
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<div class="spinner" style="margin:0"></div> Wird gespeichert...';
-
-            try {
-                const { error } = await supabase
-                    .from('articles')
-                    .insert({
-                        title,
-                        category,
-                        summary,
-                        content,
-                        image_url: imageUrl,
-                        read_time: readTime,
-                        status: 'published',
-                        ai_processed: false,
-                        timestamp: new Date().toISOString()
-                    });
-
-                if (error) throw error;
-
-                showToast('🎉 Artikel erfolgreich veröffentlicht!');
-                form.reset();
-                imagePreview.innerHTML = 'Bild-Vorschau';
-                loadArticles();
-            } catch (error) {
-                console.error('Error creating article:', error);
-                showToast('Fehler: ' + error.message, 'error');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<span>✨</span> Artikel veröffentlichen';
-            }
-        });
-
-        // Delete Article
         async function deleteArticle(id) {
             if (!confirm('Artikel wirklich löschen?')) return;
-
             try {
-                const { error } = await supabase
-                    .from('articles')
-                    .delete()
-                    .eq('id', id);
-
+                const { error } = await supabase.from('articles').delete().eq('id', id);
                 if (error) throw error;
-
                 showToast('Artikel gelöscht');
                 loadArticles();
             } catch (error) {
-                console.error('Error deleting article:', error);
-                showToast('Fehler beim Löschen', 'error');
+                showToast('Fehler: ' + error.message, 'error');
             }
         }
 
-        // Close modal on overlay click
-        editModal.addEventListener('click', (e) => {
-            if (e.target === editModal) {
-                closeEditModal();
-            }
+        // Modal close handlers
+        document.getElementById('editModal').addEventListener('click', (e) => {
+            if (e.target.id === 'editModal') closeEditModal();
         });
-
-        // Close modal on Escape key
+        document.getElementById('editCategoryModal').addEventListener('click', (e) => {
+            if (e.target.id === 'editCategoryModal') closeEditCategoryModal();
+        });
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 closeEditModal();
+                closeEditCategoryModal();
             }
         });
     </script>
