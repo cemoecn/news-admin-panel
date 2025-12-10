@@ -252,6 +252,17 @@
             transform: none;
         }
 
+        .btn-edit {
+            background: rgba(102, 126, 234, 0.2);
+            color: #667eea;
+            padding: 8px 16px;
+            font-size: 0.85rem;
+        }
+
+        .btn-edit:hover {
+            background: rgba(102, 126, 234, 0.3);
+        }
+
         .btn-danger {
             background: rgba(239, 68, 68, 0.2);
             color: #ef4444;
@@ -261,6 +272,12 @@
 
         .btn-danger:hover {
             background: rgba(239, 68, 68, 0.3);
+        }
+
+        .article-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
         }
 
         .articles-list {
@@ -321,6 +338,94 @@
             font-size: 0.75rem;
         }
 
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: #1a1a2e;
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.show .modal {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .modal-header h2 {
+            font-size: 1.5rem;
+            margin: 0;
+        }
+
+        .modal-header h2::before {
+            display: none;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 5px;
+            line-height: 1;
+        }
+
+        .modal-close:hover {
+            color: #fff;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .modal-actions .btn {
+            flex: 1;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
         .toast {
             position: fixed;
             bottom: 30px;
@@ -332,7 +437,7 @@
             transform: translateY(100px);
             opacity: 0;
             transition: all 0.3s ease;
-            z-index: 1000;
+            z-index: 1001;
         }
 
         .toast.show {
@@ -526,6 +631,60 @@
         </div>
     </div>
 
+    <!-- Edit Modal -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>✏️ Artikel bearbeiten</h2>
+                <button class="modal-close" onclick="closeEditModal()">&times;</button>
+            </div>
+            <form id="editForm">
+                <input type="hidden" id="editId">
+                <div class="form-group">
+                    <label for="editTitle">Titel *</label>
+                    <input type="text" id="editTitle" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="editCategory">Kategorie *</label>
+                    <select id="editCategory" required>
+                        <option value="Tech">Tech</option>
+                        <option value="Politik">Politik</option>
+                        <option value="Wirtschaft">Wirtschaft</option>
+                        <option value="Sport">Sport</option>
+                        <option value="Unterhaltung">Unterhaltung</option>
+                        <option value="Wissenschaft">Wissenschaft</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="editSummary">Zusammenfassung *</label>
+                    <textarea id="editSummary" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="editContent">Artikelinhalt *</label>
+                    <textarea id="editContent" class="content-area" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="editImageUrl">Bild-URL *</label>
+                    <input type="url" id="editImageUrl" required>
+                    <div class="image-preview" id="editImagePreview">
+                        Bild-Vorschau
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Abbrechen</button>
+                    <button type="submit" class="btn btn-primary" id="editSubmitBtn">
+                        💾 Speichern
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="toast" id="toast"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -550,6 +709,10 @@
         const imageUrlInput = document.getElementById('imageUrl');
         const imagePreview = document.getElementById('imagePreview');
         const toast = document.getElementById('toast');
+        const editModal = document.getElementById('editModal');
+        const editForm = document.getElementById('editForm');
+        const editImageUrlInput = document.getElementById('editImageUrl');
+        const editImagePreview = document.getElementById('editImagePreview');
 
         let authMode = 'login';
 
@@ -614,13 +777,23 @@
             }
         });
 
-        // Image Preview
+        // Image Preview for create form
         imageUrlInput.addEventListener('input', () => {
             const url = imageUrlInput.value.trim();
             if (url) {
                 imagePreview.innerHTML = `<img src="${url}" onerror="this.parentElement.innerHTML='Bild konnte nicht geladen werden'">`;
             } else {
                 imagePreview.innerHTML = 'Bild-Vorschau';
+            }
+        });
+
+        // Image Preview for edit form
+        editImageUrlInput.addEventListener('input', () => {
+            const url = editImageUrlInput.value.trim();
+            if (url) {
+                editImagePreview.innerHTML = `<img src="${url}" onerror="this.parentElement.innerHTML='Bild konnte nicht geladen werden'">`;
+            } else {
+                editImagePreview.innerHTML = 'Bild-Vorschau';
             }
         });
 
@@ -661,7 +834,10 @@
                                 <span>${new Date(article.created_at).toLocaleDateString('de-DE')}</span>
                             </div>
                         </div>
-                        <button class="btn btn-danger" onclick="deleteArticle('${article.id}')">Löschen</button>
+                        <div class="article-actions">
+                            <button class="btn btn-edit" onclick="openEditModal('${article.id}')">✏️</button>
+                            <button class="btn btn-danger" onclick="deleteArticle('${article.id}')">🗑️</button>
+                        </div>
                     </div>
                 `).join('');
             } catch (error) {
@@ -669,6 +845,82 @@
                 articlesList.innerHTML = '<div class="empty-state">Fehler beim Laden</div>';
             }
         }
+
+        // Open Edit Modal
+        async function openEditModal(id) {
+            try {
+                const { data: article, error } = await supabase
+                    .from('articles')
+                    .select('*')
+                    .eq('id', id)
+                    .single();
+
+                if (error) throw error;
+
+                document.getElementById('editId').value = article.id;
+                document.getElementById('editTitle').value = article.title;
+                document.getElementById('editCategory').value = article.category;
+                document.getElementById('editSummary').value = article.summary;
+                document.getElementById('editContent').value = article.content;
+                document.getElementById('editImageUrl').value = article.image_url;
+                editImagePreview.innerHTML = `<img src="${article.image_url}" onerror="this.parentElement.innerHTML='Bild konnte nicht geladen werden'">`;
+
+                editModal.classList.add('show');
+            } catch (error) {
+                console.error('Error loading article:', error);
+                showToast('Fehler beim Laden des Artikels', 'error');
+            }
+        }
+
+        // Close Edit Modal
+        function closeEditModal() {
+            editModal.classList.remove('show');
+        }
+
+        // Edit Form Submit
+        editForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const id = document.getElementById('editId').value;
+            const title = document.getElementById('editTitle').value.trim();
+            const category = document.getElementById('editCategory').value;
+            const summary = document.getElementById('editSummary').value.trim();
+            const content = document.getElementById('editContent').value.trim();
+            const imageUrl = document.getElementById('editImageUrl').value.trim();
+
+            const wordCount = content.split(/\s+/).length;
+            const readTime = `${Math.ceil(wordCount / 200)} min read`;
+
+            const editSubmitBtn = document.getElementById('editSubmitBtn');
+            editSubmitBtn.disabled = true;
+            editSubmitBtn.innerHTML = '<div class="spinner" style="margin:0"></div> Wird gespeichert...';
+
+            try {
+                const { error } = await supabase
+                    .from('articles')
+                    .update({
+                        title,
+                        category,
+                        summary,
+                        content,
+                        image_url: imageUrl,
+                        read_time: readTime
+                    })
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                showToast('✅ Artikel erfolgreich aktualisiert!');
+                closeEditModal();
+                loadArticles();
+            } catch (error) {
+                console.error('Error updating article:', error);
+                showToast('Fehler: ' + error.message, 'error');
+            } finally {
+                editSubmitBtn.disabled = false;
+                editSubmitBtn.innerHTML = '💾 Speichern';
+            }
+        });
 
         // Create Article
         form.addEventListener('submit', async (e) => {
@@ -735,6 +987,20 @@
                 showToast('Fehler beim Löschen', 'error');
             }
         }
+
+        // Close modal on overlay click
+        editModal.addEventListener('click', (e) => {
+            if (e.target === editModal) {
+                closeEditModal();
+            }
+        });
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeEditModal();
+            }
+        });
     </script>
 </body>
 
