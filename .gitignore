@@ -1,0 +1,7 @@
+# Admin Panel Files
+node_modules/
+.env
+.DS_Store
+
+# Expo/React Native files (not needed for admin panel)
+news-app/

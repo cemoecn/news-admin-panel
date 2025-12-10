@@ -1,0 +1,16 @@
+{
+    "version": 2,
+    "name": "news-admin-panel",
+    "builds": [
+        {
+            "src": "admin-panel.html",
+            "use": "@vercel/static"
+        }
+    ],
+    "routes": [
+        {
+            "src": "/(.*)",
+            "dest": "/admin-panel.html"
+        }
+    ]
+}
