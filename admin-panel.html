@@ -780,6 +780,10 @@
             padding: 8px 12px;
             font-size: 0.85rem;
         }
+
+        .insert-image-btn {
+            margin-top: 8px;
+        }
     </style>
 </head>
 
@@ -854,6 +858,10 @@
                             <label for="content">Artikelinhalt *</label>
                             <textarea id="content" class="content-area"
                                 placeholder="Den vollständigen Artikeltext hier einfügen..." required></textarea>
+                            <button type="button" class="btn btn-secondary btn-sm insert-image-btn"
+                                onclick="insertInlineImage('content')">
+                                🖼️ Bild einfügen
+                            </button>
                         </div>
 
                         <div class="form-group">
@@ -971,6 +979,10 @@
                 <div class="form-group">
                     <label for="editContent">Artikelinhalt *</label>
                     <textarea id="editContent" class="content-area" required></textarea>
+                    <button type="button" class="btn btn-secondary btn-sm insert-image-btn"
+                        onclick="insertInlineImage('editContent')">
+                        🖼️ Bild einfügen
+                    </button>
                 </div>
                 <div class="form-group">
                     <label for="editImageUrl">Bild-URL *</label>
@@ -1281,6 +1293,23 @@
         function toggleEditLiveUpdates() {
             const isLive = document.getElementById('editIsLive').checked;
             document.getElementById('editLiveUpdatesSection').style.display = isLive ? 'block' : 'none';
+        }
+
+        function insertInlineImage(textareaId) {
+            const imageUrl = prompt('Bild-URL eingeben:');
+            if (!imageUrl) return;
+
+            const textarea = document.getElementById(textareaId);
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+
+            const imageTag = `[img:${imageUrl}]`;
+            textarea.value = text.substring(0, start) + imageTag + text.substring(end);
+
+            // Set cursor after inserted tag
+            textarea.selectionStart = textarea.selectionEnd = start + imageTag.length;
+            textarea.focus();
         }
 
         function addLiveUpdate() {
