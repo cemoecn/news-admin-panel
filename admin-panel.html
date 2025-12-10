@@ -593,6 +593,86 @@
             margin-bottom: 20px;
             font-size: 0.9rem;
         }
+
+        /* Live Toggle Styles */
+        .live-toggle {
+            margin-top: 10px;
+        }
+
+        .toggle-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            gap: 12px;
+        }
+
+        .toggle-label input {
+            display: none;
+        }
+
+        .toggle-switch {
+            width: 50px;
+            height: 26px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 13px;
+            position: relative;
+            transition: background 0.3s;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            background: #fff;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s;
+        }
+
+        .toggle-label input:checked+.toggle-switch {
+            background: #ef4444;
+        }
+
+        .toggle-label input:checked+.toggle-switch::after {
+            transform: translateX(24px);
+        }
+
+        .toggle-text {
+            color: #aaa;
+            font-size: 0.95rem;
+        }
+
+        .toggle-label input:checked~.toggle-text {
+            color: #ef4444;
+            font-weight: 600;
+        }
+
+        .live-badge {
+            display: inline-flex;
+            align-items: center;
+            background: #ef4444;
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            margin-left: 8px;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.6;
+            }
+        }
     </style>
 </head>
 
@@ -673,6 +753,14 @@
                             <label for="imageUrl">Bild-URL *</label>
                             <input type="url" id="imageUrl" placeholder="https://images.unsplash.com/..." required>
                             <div class="image-preview" id="imagePreview">Bild-Vorschau</div>
+                        </div>
+
+                        <div class="form-group live-toggle">
+                            <label class="toggle-label">
+                                <input type="checkbox" id="isLive">
+                                <span class="toggle-switch"></span>
+                                <span class="toggle-text">🔴 LIVE - Breaking News / Live-Ticker</span>
+                            </label>
                         </div>
 
                         <button type="submit" class="btn btn-primary" id="submitBtn">
@@ -770,6 +858,13 @@
                     <label for="editImageUrl">Bild-URL *</label>
                     <input type="url" id="editImageUrl" required>
                     <div class="image-preview" id="editImagePreview">Bild-Vorschau</div>
+                </div>
+                <div class="form-group live-toggle">
+                    <label class="toggle-label">
+                        <input type="checkbox" id="editIsLive">
+                        <span class="toggle-switch"></span>
+                        <span class="toggle-text">🔴 LIVE - Breaking News / Live-Ticker</span>
+                    </label>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Abbrechen</button>
@@ -1065,11 +1160,12 @@
                 document.getElementById('articlesList').innerHTML = articles.map(article => {
                     const cat = categories.find(c => c.name === article.category);
                     const color = cat ? cat.color : '#667eea';
+                    const liveBadge = article.is_live ? '<span class="live-badge">🔴 LIVE</span>' : '';
                     return `
                         <div class="article-item">
                             <img src="${article.image_url}" alt="" class="article-thumb" onerror="this.style.display='none'">
                             <div class="article-info">
-                                <div class="article-title">${article.title}</div>
+                                <div class="article-title">${article.title}${liveBadge}</div>
                                 <div class="article-meta">
                                     <span class="article-category" style="background: ${color}20; color: ${color}">${article.category}</span>
                                     <span>${new Date(article.created_at).toLocaleDateString('de-DE')}</span>
@@ -1096,6 +1192,7 @@
             const summary = document.getElementById('summary').value.trim();
             const content = document.getElementById('content').value.trim();
             const imageUrl = document.getElementById('imageUrl').value.trim();
+            const isLive = document.getElementById('isLive').checked;
             const readTime = `${Math.ceil(content.split(/\s+/).length / 180)} min read`;
             const btn = document.getElementById('submitBtn');
 
@@ -1107,12 +1204,14 @@
                     title, category, summary, content,
                     image_url: imageUrl, read_time: readTime,
                     status: 'published', ai_processed: false,
+                    is_live: isLive,
                     timestamp: new Date().toISOString()
                 });
                 if (error) throw error;
                 showToast('🎉 Artikel veröffentlicht!');
                 document.getElementById('articleForm').reset();
                 document.getElementById('imagePreview').innerHTML = 'Bild-Vorschau';
+                document.getElementById('isLive').checked = false;
                 loadArticles();
             } catch (error) {
                 showToast('Fehler: ' + error.message, 'error');
@@ -1134,6 +1233,7 @@
                 document.getElementById('editContent').value = article.content;
                 document.getElementById('editImageUrl').value = article.image_url;
                 document.getElementById('editImagePreview').innerHTML = `<img src="${article.image_url}">`;
+                document.getElementById('editIsLive').checked = article.is_live || false;
                 document.getElementById('editModal').classList.add('show');
             } catch (error) {
                 showToast('Fehler beim Laden', 'error');
@@ -1152,6 +1252,7 @@
             const summary = document.getElementById('editSummary').value.trim();
             const content = document.getElementById('editContent').value.trim();
             const imageUrl = document.getElementById('editImageUrl').value.trim();
+            const isLive = document.getElementById('editIsLive').checked;
             const readTime = `${Math.ceil(content.split(/\s+/).length / 180)} min read`;
             const btn = document.getElementById('editSubmitBtn');
 
@@ -1160,7 +1261,7 @@
 
             try {
                 const { error } = await supabase.from('articles')
-                    .update({ title, category, summary, content, image_url: imageUrl, read_time: readTime })
+                    .update({ title, category, summary, content, image_url: imageUrl, read_time: readTime, is_live: isLive })
                     .eq('id', id);
                 if (error) throw error;
                 showToast('✅ Artikel aktualisiert!');
