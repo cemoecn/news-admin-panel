@@ -673,6 +673,96 @@
                 opacity: 0.6;
             }
         }
+
+        /* Live Updates Editor */
+        .live-updates-section {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 8px;
+        }
+
+        .live-updates-section label {
+            color: #ef4444;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .live-updates-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 12px;
+        }
+
+        .live-update-item {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            gap: 10px;
+        }
+
+        .live-update-item .update-time {
+            color: #ef4444;
+            font-weight: 600;
+            font-size: 0.85rem;
+            min-width: 50px;
+        }
+
+        .live-update-item .update-icon {
+            font-size: 1.1rem;
+        }
+
+        .live-update-item .update-text {
+            flex: 1;
+            color: #ddd;
+        }
+
+        .live-update-item .delete-update {
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            padding: 4px;
+            font-size: 1rem;
+        }
+
+        .live-update-item .delete-update:hover {
+            color: #ef4444;
+        }
+
+        .add-update-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .update-icon-select {
+            width: 120px;
+            padding: 8px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+
+        .update-text-input {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+
+        .btn-sm {
+            padding: 8px 12px;
+            font-size: 0.85rem;
+        }
     </style>
 </head>
 
@@ -757,10 +847,31 @@
 
                         <div class="form-group live-toggle">
                             <label class="toggle-label">
-                                <input type="checkbox" id="isLive">
+                                <input type="checkbox" id="isLive" onchange="toggleLiveUpdates()">
                                 <span class="toggle-switch"></span>
                                 <span class="toggle-text">🔴 LIVE - Breaking News / Live-Ticker</span>
                             </label>
+                        </div>
+
+                        <div class="form-group live-updates-section" id="liveUpdatesSection" style="display: none;">
+                            <label>Live Updates (Timeline)</label>
+                            <div class="live-updates-list" id="liveUpdatesList"></div>
+                            <div class="add-update-row">
+                                <select id="newUpdateIcon" class="update-icon-select">
+                                    <option value="📢">📢 News</option>
+                                    <option value="⚽">⚽ Tor</option>
+                                    <option value="🏆">🏆 Sieg</option>
+                                    <option value="🚨">🚨 Eilmeldung</option>
+                                    <option value="💬">💬 Zitat</option>
+                                    <option value="📊">📊 Statistik</option>
+                                    <option value="⏱️">⏱️ Zeit</option>
+                                    <option value="🔄">🔄 Update</option>
+                                </select>
+                                <input type="text" id="newUpdateText" placeholder="Update-Text eingeben..."
+                                    class="update-text-input">
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="addLiveUpdate()">+
+                                    Hinzufügen</button>
+                            </div>
                         </div>
 
                         <button type="submit" class="btn btn-primary" id="submitBtn">
@@ -861,10 +972,30 @@
                 </div>
                 <div class="form-group live-toggle">
                     <label class="toggle-label">
-                        <input type="checkbox" id="editIsLive">
+                        <input type="checkbox" id="editIsLive" onchange="toggleEditLiveUpdates()">
                         <span class="toggle-switch"></span>
                         <span class="toggle-text">🔴 LIVE - Breaking News / Live-Ticker</span>
                     </label>
+                </div>
+                <div class="form-group live-updates-section" id="editLiveUpdatesSection" style="display: none;">
+                    <label>Live Updates (Timeline)</label>
+                    <div class="live-updates-list" id="editLiveUpdatesList"></div>
+                    <div class="add-update-row">
+                        <select id="editNewUpdateIcon" class="update-icon-select">
+                            <option value="📢">📢 News</option>
+                            <option value="⚽">⚽ Tor</option>
+                            <option value="🏆">🏆 Sieg</option>
+                            <option value="🚨">🚨 Eilmeldung</option>
+                            <option value="💬">💬 Zitat</option>
+                            <option value="📊">📊 Statistik</option>
+                            <option value="⏱️">⏱️ Zeit</option>
+                            <option value="🔄">🔄 Update</option>
+                        </select>
+                        <input type="text" id="editNewUpdateText" placeholder="Update-Text eingeben..."
+                            class="update-text-input">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="addEditLiveUpdate()">+
+                            Hinzufügen</button>
+                    </div>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Abbrechen</button>
@@ -1141,6 +1272,88 @@
                 : 'Bild-Vorschau';
         });
 
+        // Live Updates Management
+        let liveUpdates = [];
+        let editLiveUpdates = [];
+
+        function toggleLiveUpdates() {
+            const isLive = document.getElementById('isLive').checked;
+            document.getElementById('liveUpdatesSection').style.display = isLive ? 'block' : 'none';
+        }
+
+        function toggleEditLiveUpdates() {
+            const isLive = document.getElementById('editIsLive').checked;
+            document.getElementById('editLiveUpdatesSection').style.display = isLive ? 'block' : 'none';
+        }
+
+        function addLiveUpdate() {
+            const icon = document.getElementById('newUpdateIcon').value;
+            const text = document.getElementById('newUpdateText').value.trim();
+            if (!text) return;
+
+            const now = new Date();
+            const time = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+
+            liveUpdates.unshift({ time, icon, text, timestamp: now.toISOString() });
+            renderLiveUpdates();
+            document.getElementById('newUpdateText').value = '';
+        }
+
+        function deleteLiveUpdate(index) {
+            liveUpdates.splice(index, 1);
+            renderLiveUpdates();
+        }
+
+        function renderLiveUpdates() {
+            const list = document.getElementById('liveUpdatesList');
+            if (liveUpdates.length === 0) {
+                list.innerHTML = '<div style="color:#888;text-align:center;padding:12px;">Noch keine Updates</div>';
+                return;
+            }
+            list.innerHTML = liveUpdates.map((update, i) => `
+                <div class="live-update-item">
+                    <span class="update-time">${update.time}</span>
+                    <span class="update-icon">${update.icon}</span>
+                    <span class="update-text">${update.text}</span>
+                    <button class="delete-update" onclick="deleteLiveUpdate(${i})">×</button>
+                </div>
+            `).join('');
+        }
+
+        function addEditLiveUpdate() {
+            const icon = document.getElementById('editNewUpdateIcon').value;
+            const text = document.getElementById('editNewUpdateText').value.trim();
+            if (!text) return;
+
+            const now = new Date();
+            const time = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+
+            editLiveUpdates.unshift({ time, icon, text, timestamp: now.toISOString() });
+            renderEditLiveUpdates();
+            document.getElementById('editNewUpdateText').value = '';
+        }
+
+        function deleteEditLiveUpdate(index) {
+            editLiveUpdates.splice(index, 1);
+            renderEditLiveUpdates();
+        }
+
+        function renderEditLiveUpdates() {
+            const list = document.getElementById('editLiveUpdatesList');
+            if (editLiveUpdates.length === 0) {
+                list.innerHTML = '<div style="color:#888;text-align:center;padding:12px;">Noch keine Updates</div>';
+                return;
+            }
+            list.innerHTML = editLiveUpdates.map((update, i) => `
+                <div class="live-update-item">
+                    <span class="update-time">${update.time}</span>
+                    <span class="update-icon">${update.icon}</span>
+                    <span class="update-text">${update.text}</span>
+                    <button class="delete-update" onclick="deleteEditLiveUpdate(${i})">×</button>
+                </div>
+            `).join('');
+        }
+
         async function loadArticles() {
             try {
                 const { data: articles, error } = await supabase
@@ -1205,6 +1418,7 @@
                     image_url: imageUrl, read_time: readTime,
                     status: 'published', ai_processed: false,
                     is_live: isLive,
+                    live_updates: isLive ? liveUpdates : [],
                     timestamp: new Date().toISOString()
                 });
                 if (error) throw error;
@@ -1212,6 +1426,9 @@
                 document.getElementById('articleForm').reset();
                 document.getElementById('imagePreview').innerHTML = 'Bild-Vorschau';
                 document.getElementById('isLive').checked = false;
+                document.getElementById('liveUpdatesSection').style.display = 'none';
+                liveUpdates = [];
+                renderLiveUpdates();
                 loadArticles();
             } catch (error) {
                 showToast('Fehler: ' + error.message, 'error');
@@ -1234,6 +1451,12 @@
                 document.getElementById('editImageUrl').value = article.image_url;
                 document.getElementById('editImagePreview').innerHTML = `<img src="${article.image_url}">`;
                 document.getElementById('editIsLive').checked = article.is_live || false;
+
+                // Load live updates
+                editLiveUpdates = article.live_updates || [];
+                renderEditLiveUpdates();
+                document.getElementById('editLiveUpdatesSection').style.display = article.is_live ? 'block' : 'none';
+
                 document.getElementById('editModal').classList.add('show');
             } catch (error) {
                 showToast('Fehler beim Laden', 'error');
@@ -1261,7 +1484,12 @@
 
             try {
                 const { error } = await supabase.from('articles')
-                    .update({ title, category, summary, content, image_url: imageUrl, read_time: readTime, is_live: isLive })
+                    .update({
+                        title, category, summary, content,
+                        image_url: imageUrl, read_time: readTime,
+                        is_live: isLive,
+                        live_updates: isLive ? editLiveUpdates : []
+                    })
                     .eq('id', id);
                 if (error) throw error;
                 showToast('✅ Artikel aktualisiert!');
