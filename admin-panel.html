@@ -674,6 +674,23 @@
             }
         }
 
+        .normal-badge {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(102, 126, 234, 0.2);
+            color: #667eea;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-right: 8px;
+        }
+
+        .live-article {
+            border-left: 3px solid #ef4444;
+            background: rgba(239, 68, 68, 0.05);
+        }
+
         /* Live Updates Editor */
         .live-updates-section {
             background: rgba(239, 68, 68, 0.1);
@@ -857,16 +874,6 @@
                             <label>Live Updates (Timeline)</label>
                             <div class="live-updates-list" id="liveUpdatesList"></div>
                             <div class="add-update-row">
-                                <select id="newUpdateIcon" class="update-icon-select">
-                                    <option value="📢">📢 News</option>
-                                    <option value="⚽">⚽ Tor</option>
-                                    <option value="🏆">🏆 Sieg</option>
-                                    <option value="🚨">🚨 Eilmeldung</option>
-                                    <option value="💬">💬 Zitat</option>
-                                    <option value="📊">📊 Statistik</option>
-                                    <option value="⏱️">⏱️ Zeit</option>
-                                    <option value="🔄">🔄 Update</option>
-                                </select>
                                 <input type="text" id="newUpdateText" placeholder="Update-Text eingeben..."
                                     class="update-text-input">
                                 <button type="button" class="btn btn-secondary btn-sm" onclick="addLiveUpdate()">+
@@ -981,16 +988,6 @@
                     <label>Live Updates (Timeline)</label>
                     <div class="live-updates-list" id="editLiveUpdatesList"></div>
                     <div class="add-update-row">
-                        <select id="editNewUpdateIcon" class="update-icon-select">
-                            <option value="📢">📢 News</option>
-                            <option value="⚽">⚽ Tor</option>
-                            <option value="🏆">🏆 Sieg</option>
-                            <option value="🚨">🚨 Eilmeldung</option>
-                            <option value="💬">💬 Zitat</option>
-                            <option value="📊">📊 Statistik</option>
-                            <option value="⏱️">⏱️ Zeit</option>
-                            <option value="🔄">🔄 Update</option>
-                        </select>
                         <input type="text" id="editNewUpdateText" placeholder="Update-Text eingeben..."
                             class="update-text-input">
                         <button type="button" class="btn btn-secondary btn-sm" onclick="addEditLiveUpdate()">+
@@ -1287,14 +1284,13 @@
         }
 
         function addLiveUpdate() {
-            const icon = document.getElementById('newUpdateIcon').value;
             const text = document.getElementById('newUpdateText').value.trim();
             if (!text) return;
 
             const now = new Date();
             const time = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
 
-            liveUpdates.unshift({ time, icon, text, timestamp: now.toISOString() });
+            liveUpdates.unshift({ time, text, timestamp: now.toISOString() });
             renderLiveUpdates();
             document.getElementById('newUpdateText').value = '';
         }
@@ -1313,7 +1309,6 @@
             list.innerHTML = liveUpdates.map((update, i) => `
                 <div class="live-update-item">
                     <span class="update-time">${update.time}</span>
-                    <span class="update-icon">${update.icon}</span>
                     <span class="update-text">${update.text}</span>
                     <button class="delete-update" onclick="deleteLiveUpdate(${i})">×</button>
                 </div>
@@ -1321,14 +1316,13 @@
         }
 
         function addEditLiveUpdate() {
-            const icon = document.getElementById('editNewUpdateIcon').value;
             const text = document.getElementById('editNewUpdateText').value.trim();
             if (!text) return;
 
             const now = new Date();
             const time = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
 
-            editLiveUpdates.unshift({ time, icon, text, timestamp: now.toISOString() });
+            editLiveUpdates.unshift({ time, text, timestamp: now.toISOString() });
             renderEditLiveUpdates();
             document.getElementById('editNewUpdateText').value = '';
         }
@@ -1347,7 +1341,6 @@
             list.innerHTML = editLiveUpdates.map((update, i) => `
                 <div class="live-update-item">
                     <span class="update-time">${update.time}</span>
-                    <span class="update-icon">${update.icon}</span>
                     <span class="update-text">${update.text}</span>
                     <button class="delete-update" onclick="deleteEditLiveUpdate(${i})">×</button>
                 </div>
@@ -1358,7 +1351,7 @@
             try {
                 const { data: articles, error } = await supabase
                     .from('articles')
-                    .select('id,title,category,image_url,created_at')
+                    .select('id,title,category,image_url,created_at,is_live')
                     .eq('status', 'published')
                     .order('created_at', { ascending: false });
 
@@ -1373,15 +1366,22 @@
                 document.getElementById('articlesList').innerHTML = articles.map(article => {
                     const cat = categories.find(c => c.name === article.category);
                     const color = cat ? cat.color : '#667eea';
-                    const liveBadge = article.is_live ? '<span class="live-badge">🔴 LIVE</span>' : '';
+                    const statusBadge = article.is_live
+                        ? '<span class="live-badge">🔴 LIVE</span>'
+                        : '<span class="normal-badge">Beitrag</span>';
+                    const dateTime = new Date(article.created_at).toLocaleString('de-DE', {
+                        day: '2-digit', month: '2-digit', year: 'numeric',
+                        hour: '2-digit', minute: '2-digit'
+                    });
                     return `
-                        <div class="article-item">
+                        <div class="article-item ${article.is_live ? 'live-article' : ''}">
                             <img src="${article.image_url}" alt="" class="article-thumb" onerror="this.style.display='none'">
                             <div class="article-info">
-                                <div class="article-title">${article.title}${liveBadge}</div>
+                                <div class="article-title">${article.title}</div>
                                 <div class="article-meta">
+                                    ${statusBadge}
                                     <span class="article-category" style="background: ${color}20; color: ${color}">${article.category}</span>
-                                    <span>${new Date(article.created_at).toLocaleDateString('de-DE')}</span>
+                                    <span>${dateTime}</span>
                                 </div>
                             </div>
                             <div class="article-actions">
