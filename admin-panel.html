@@ -869,6 +869,40 @@
             display: flex;
             gap: 6px;
         }
+
+        .channels-checkboxes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .channel-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .channel-checkbox:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .channel-checkbox input:checked+span {
+            color: #667eea;
+        }
+
+        .channel-checkbox input {
+            accent-color: #667eea;
+        }
+
+        .btn-edit {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
     </style>
 </head>
 
@@ -1127,8 +1161,8 @@
                                 <input type="datetime-local" id="broadcastStartTime" required>
                             </div>
                             <div class="form-group">
-                                <label for="broadcastChannel">Sender *</label>
-                                <select id="broadcastChannel" required></select>
+                                <label>Sender * (mehrere auswählbar)</label>
+                                <div id="broadcastChannelsCheckboxes" class="channels-checkboxes"></div>
                             </div>
                             <div class="form-group live-toggle">
                                 <label class="toggle-label">
@@ -1233,6 +1267,51 @@
                     <button type="button" class="btn btn-secondary"
                         onclick="closeEditCategoryModal()">Abbrechen</button>
                     <button type="submit" class="btn btn-primary" id="editCategorySubmitBtn">💾 Speichern</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Broadcast Modal -->
+    <div class="modal-overlay" id="editBroadcastModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>✏️ Übertragung bearbeiten</h2>
+                <button class="modal-close" onclick="closeEditBroadcastModal()">&times;</button>
+            </div>
+            <form id="editBroadcastForm">
+                <input type="hidden" id="editBroadcastId">
+                <div class="form-group">
+                    <label for="editBroadcastSportType">Sportart *</label>
+                    <select id="editBroadcastSportType" required></select>
+                </div>
+                <div class="form-group">
+                    <label for="editBroadcastEventName">Veranstaltung *</label>
+                    <input type="text" id="editBroadcastEventName" required>
+                </div>
+                <div class="form-group">
+                    <label for="editBroadcastTeams">Teams</label>
+                    <input type="text" id="editBroadcastTeams">
+                </div>
+                <div class="form-group">
+                    <label for="editBroadcastStartTime">Startzeit *</label>
+                    <input type="datetime-local" id="editBroadcastStartTime" required>
+                </div>
+                <div class="form-group">
+                    <label>Sender * (mehrere auswählbar)</label>
+                    <div id="editBroadcastChannelsCheckboxes" class="channels-checkboxes"></div>
+                </div>
+                <div class="form-group live-toggle">
+                    <label class="toggle-label">
+                        <input type="checkbox" id="editBroadcastGameOfDay">
+                        <span class="toggle-switch"></span>
+                        <span class="toggle-text">⭐ Spiel des Tages</span>
+                    </label>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary"
+                        onclick="closeEditBroadcastModal()">Abbrechen</button>
+                    <button type="submit" class="btn btn-primary">💾 Speichern</button>
                 </div>
             </form>
         </div>
@@ -1796,8 +1875,14 @@
         }
 
         function updateChannelSelects() {
-            const html = channels.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-            document.getElementById('broadcastChannel').innerHTML = html;
+            const html = channels.map(c => `
+                <label class="channel-checkbox">
+                    <input type="checkbox" name="broadcastChannels" value="${c.id}">
+                    <span>${c.name}</span>
+                </label>
+            `).join('');
+            document.getElementById('broadcastChannelsCheckboxes').innerHTML = html;
+            document.getElementById('editBroadcastChannelsCheckboxes').innerHTML = html;
         }
 
         document.getElementById('channelForm').addEventListener('submit', async (e) => {
@@ -1897,7 +1982,7 @@
             try {
                 const { data, error } = await supabase
                     .from('broadcasts')
-                    .select('*, channels(name), sport_types(name, icon)')
+                    .select('*, sport_types(name, icon), broadcast_channels(channel_id, channels(name))')
                     .order('start_time', { ascending: true });
                 if (error) throw error;
                 broadcasts = data || [];
@@ -1921,17 +2006,17 @@
                 });
                 const sportIcon = b.sport_types?.icon || '🏆';
                 const sportName = b.sport_types?.name || '';
-                const channelName = b.channels?.name || '';
-                const starBadge = b.is_game_of_day ? '<span style="color:#ffc107;margin-left:8px;">⭐ SPIEL DES TAGES</span>' : '';
+                const channelNames = b.broadcast_channels?.map(bc => bc.channels?.name).filter(Boolean).join(', ') || 'Keine Sender';
+                const starBadge = b.is_game_of_day ? '<span style="color:#ffc107;margin-left:8px;">⭐</span>' : '';
                 return `
                     <div class="item-row">
                         <span class="item-icon">${sportIcon}</span>
                         <div class="item-info">
                             <div class="item-name">${b.event_name}${b.teams ? ': ' + b.teams : ''}${starBadge}</div>
-                            <div class="item-meta">${date} • ${channelName} • ${sportName}</div>
-                        </div>
+                            <div class="item-meta">${date} • ${channelNames} • ${sportName}</div>
                         </div>
                         <div class="item-actions">
+                            <button class="btn btn-sm btn-edit" onclick="openEditBroadcastModal('${b.id}')">✏️</button>
                             <button class="btn btn-sm btn-danger" onclick="deleteBroadcast('${b.id}')">🗑️</button>
                         </div>
                     </div>
@@ -1945,16 +2030,97 @@
             const event_name = document.getElementById('broadcastEventName').value.trim();
             const teams = document.getElementById('broadcastTeams').value.trim() || null;
             const start_time = document.getElementById('broadcastStartTime').value;
-            const channel_id = document.getElementById('broadcastChannel').value;
             const is_game_of_day = document.getElementById('broadcastGameOfDay').checked;
 
+            // Get selected channels
+            const selectedChannels = Array.from(document.querySelectorAll('#broadcastChannelsCheckboxes input:checked')).map(cb => cb.value);
+            if (selectedChannels.length === 0) {
+                showToast('Bitte mindestens einen Sender auswählen', 'error');
+                return;
+            }
+
             try {
-                const { error } = await supabase.from('broadcasts').insert({
-                    sport_type_id, event_name, teams, start_time, channel_id, is_game_of_day
-                });
+                // Insert broadcast
+                const { data: broadcast, error } = await supabase.from('broadcasts').insert({
+                    sport_type_id, event_name, teams, start_time, is_game_of_day
+                }).select().single();
                 if (error) throw error;
+
+                // Insert channel relationships
+                const channelRelations = selectedChannels.map(channel_id => ({
+                    broadcast_id: broadcast.id,
+                    channel_id
+                }));
+                const { error: relError } = await supabase.from('broadcast_channels').insert(channelRelations);
+                if (relError) throw relError;
+
                 showToast('✅ Übertragung erstellt!');
                 document.getElementById('broadcastForm').reset();
+                loadBroadcasts();
+            } catch (error) {
+                showToast('Fehler: ' + error.message, 'error');
+            }
+        });
+
+        async function openEditBroadcastModal(id) {
+            const b = broadcasts.find(br => br.id === id);
+            if (!b) return;
+
+            document.getElementById('editBroadcastId').value = b.id;
+            document.getElementById('editBroadcastSportType').innerHTML = sportTypes.map(s => `<option value="${s.id}" ${s.id === b.sport_type_id ? 'selected' : ''}>${s.icon || '🏆'} ${s.name}</option>`).join('');
+            document.getElementById('editBroadcastEventName').value = b.event_name;
+            document.getElementById('editBroadcastTeams').value = b.teams || '';
+            document.getElementById('editBroadcastStartTime').value = new Date(b.start_time).toISOString().slice(0, 16);
+            document.getElementById('editBroadcastGameOfDay').checked = b.is_game_of_day;
+
+            // Set channel checkboxes
+            const selectedChannelIds = b.broadcast_channels?.map(bc => bc.channel_id) || [];
+            document.querySelectorAll('#editBroadcastChannelsCheckboxes input').forEach(cb => {
+                cb.checked = selectedChannelIds.includes(cb.value);
+            });
+
+            document.getElementById('editBroadcastModal').classList.add('show');
+        }
+
+        function closeEditBroadcastModal() {
+            document.getElementById('editBroadcastModal').classList.remove('show');
+        }
+
+        document.getElementById('editBroadcastForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('editBroadcastId').value;
+            const sport_type_id = document.getElementById('editBroadcastSportType').value;
+            const event_name = document.getElementById('editBroadcastEventName').value.trim();
+            const teams = document.getElementById('editBroadcastTeams').value.trim() || null;
+            const start_time = document.getElementById('editBroadcastStartTime').value;
+            const is_game_of_day = document.getElementById('editBroadcastGameOfDay').checked;
+
+            const selectedChannels = Array.from(document.querySelectorAll('#editBroadcastChannelsCheckboxes input:checked')).map(cb => cb.value);
+            if (selectedChannels.length === 0) {
+                showToast('Bitte mindestens einen Sender auswählen', 'error');
+                return;
+            }
+
+            try {
+                // Update broadcast
+                const { error } = await supabase.from('broadcasts').update({
+                    sport_type_id, event_name, teams, start_time, is_game_of_day
+                }).eq('id', id);
+                if (error) throw error;
+
+                // Delete old channel relationships
+                await supabase.from('broadcast_channels').delete().eq('broadcast_id', id);
+
+                // Insert new channel relationships
+                const channelRelations = selectedChannels.map(channel_id => ({
+                    broadcast_id: id,
+                    channel_id
+                }));
+                const { error: relError } = await supabase.from('broadcast_channels').insert(channelRelations);
+                if (relError) throw relError;
+
+                showToast('✅ Übertragung aktualisiert!');
+                closeEditBroadcastModal();
                 loadBroadcasts();
             } catch (error) {
                 showToast('Fehler: ' + error.message, 'error');
@@ -1964,6 +2130,7 @@
         async function deleteBroadcast(id) {
             if (!confirm('Übertragung wirklich löschen?')) return;
             try {
+                // Junction table entries are deleted via CASCADE
                 const { error } = await supabase.from('broadcasts').delete().eq('id', id);
                 if (error) throw error;
                 showToast('Übertragung gelöscht');
@@ -1980,10 +2147,14 @@
         document.getElementById('editCategoryModal').addEventListener('click', (e) => {
             if (e.target.id === 'editCategoryModal') closeEditCategoryModal();
         });
+        document.getElementById('editBroadcastModal').addEventListener('click', (e) => {
+            if (e.target.id === 'editBroadcastModal') closeEditBroadcastModal();
+        });
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 closeEditModal();
                 closeEditCategoryModal();
+                closeEditBroadcastModal();
             }
         });
     </script>
