@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS broadcasts (
     teams TEXT,
     start_time TIMESTAMP WITH TIME ZONE NOT NULL,
     channel_id UUID REFERENCES channels(id) ON DELETE CASCADE,
+    is_game_of_day BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 

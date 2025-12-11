@@ -1130,6 +1130,13 @@
                                 <label for="broadcastChannel">Sender *</label>
                                 <select id="broadcastChannel" required></select>
                             </div>
+                            <div class="form-group live-toggle">
+                                <label class="toggle-label">
+                                    <input type="checkbox" id="broadcastGameOfDay">
+                                    <span class="toggle-switch"></span>
+                                    <span class="toggle-text">⭐ Spiel des Tages</span>
+                                </label>
+                            </div>
                             <button type="submit" class="btn btn-primary">➕ Übertragung hinzufügen</button>
                         </form>
                     </div>
@@ -1915,12 +1922,14 @@
                 const sportIcon = b.sport_types?.icon || '🏆';
                 const sportName = b.sport_types?.name || '';
                 const channelName = b.channels?.name || '';
+                const starBadge = b.is_game_of_day ? '<span style="color:#ffc107;margin-left:8px;">⭐ SPIEL DES TAGES</span>' : '';
                 return `
                     <div class="item-row">
                         <span class="item-icon">${sportIcon}</span>
                         <div class="item-info">
-                            <div class="item-name">${b.event_name}${b.teams ? ': ' + b.teams : ''}</div>
+                            <div class="item-name">${b.event_name}${b.teams ? ': ' + b.teams : ''}${starBadge}</div>
                             <div class="item-meta">${date} • ${channelName} • ${sportName}</div>
+                        </div>
                         </div>
                         <div class="item-actions">
                             <button class="btn btn-sm btn-danger" onclick="deleteBroadcast('${b.id}')">🗑️</button>
@@ -1937,10 +1946,11 @@
             const teams = document.getElementById('broadcastTeams').value.trim() || null;
             const start_time = document.getElementById('broadcastStartTime').value;
             const channel_id = document.getElementById('broadcastChannel').value;
+            const is_game_of_day = document.getElementById('broadcastGameOfDay').checked;
 
             try {
                 const { error } = await supabase.from('broadcasts').insert({
-                    sport_type_id, event_name, teams, start_time, channel_id
+                    sport_type_id, event_name, teams, start_time, channel_id, is_game_of_day
                 });
                 if (error) throw error;
                 showToast('✅ Übertragung erstellt!');
