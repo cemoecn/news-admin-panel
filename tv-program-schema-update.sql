@@ -10,6 +10,9 @@ CREATE TABLE IF NOT EXISTS broadcast_channels (
     UNIQUE(broadcast_id, channel_id)
 );
 
+-- Migration für bestehende Datenbanken:
+-- ALTER TABLE sport_types ADD COLUMN IF NOT EXISTS color TEXT DEFAULT '#667eea';
+-- ALTER TABLE sport_types DROP COLUMN IF EXISTS icon;
 -- Index für schnellere Abfragen
 CREATE INDEX IF NOT EXISTS idx_broadcast_channels_broadcast ON broadcast_channels(broadcast_id);
 CREATE INDEX IF NOT EXISTS idx_broadcast_channels_channel ON broadcast_channels(channel_id);

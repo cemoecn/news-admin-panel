@@ -1121,8 +1121,8 @@
                                 <input type="text" id="sportTypeName" placeholder="z.B. Fußball" required>
                             </div>
                             <div class="form-group">
-                                <label for="sportTypeIcon">Icon (Emoji)</label>
-                                <input type="text" id="sportTypeIcon" placeholder="⚽" maxlength="4">
+                                <label for="sportTypeColor">Farbe *</label>
+                                <input type="color" id="sportTypeColor" value="#667eea" required>
                             </div>
                             <button type="submit" class="btn btn-primary">➕ Sportart hinzufügen</button>
                         </form>
@@ -1934,7 +1934,7 @@
             }
             list.innerHTML = sportTypes.map(st => `
                 <div class="item-row">
-                    <span class="item-icon">${st.icon || '🏆'}</span>
+                    <span class="item-icon" style="color:${st.color || '#667eea'};font-size:24px;">●</span>
                     <div class="item-info">
                         <div class="item-name">${st.name}</div>
                     </div>
@@ -1946,17 +1946,17 @@
         }
 
         function updateSportTypeSelects() {
-            const html = sportTypes.map(s => `<option value="${s.id}">${s.icon || '🏆'} ${s.name}</option>`).join('');
+            const html = sportTypes.map(s => `<option value="${s.id}"><span style="color:${s.color || '#667eea'}">●</span> ${s.name}</option>`).join('');
             document.getElementById('broadcastSportType').innerHTML = html;
         }
 
         document.getElementById('sportTypeForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const name = document.getElementById('sportTypeName').value.trim();
-            const icon = document.getElementById('sportTypeIcon').value.trim() || '🏆';
+            const color = document.getElementById('sportTypeColor').value;
 
             try {
-                const { error } = await supabase.from('sport_types').insert({ name, icon });
+                const { error } = await supabase.from('sport_types').insert({ name, color });
                 if (error) throw error;
                 showToast('✅ Sportart erstellt!');
                 document.getElementById('sportTypeForm').reset();

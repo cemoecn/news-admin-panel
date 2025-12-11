@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS channels (
 CREATE TABLE IF NOT EXISTS sport_types (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     name TEXT NOT NULL,
-    icon TEXT DEFAULT '⚽',
+    color TEXT DEFAULT '#667eea',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
