@@ -1982,7 +1982,7 @@
             try {
                 const { data, error } = await supabase
                     .from('broadcasts')
-                    .select('*, sport_types(name, icon), broadcast_channels(channel_id, channels(name))')
+                    .select('*, sport_types(name, color), broadcast_channels(channel_id, channels(name))')
                     .order('start_time', { ascending: true });
                 if (error) throw error;
                 broadcasts = data || [];
@@ -2004,13 +2004,13 @@
                     day: '2-digit', month: '2-digit', year: 'numeric',
                     hour: '2-digit', minute: '2-digit'
                 });
-                const sportIcon = b.sport_types?.icon || '🏆';
+                const sportColor = b.sport_types?.color || '#667eea';
                 const sportName = b.sport_types?.name || '';
                 const channelNames = b.broadcast_channels?.map(bc => bc.channels?.name).filter(Boolean).join(', ') || 'Keine Sender';
                 const starBadge = b.is_game_of_day ? '<span style="color:#ffc107;margin-left:8px;">⭐</span>' : '';
                 return `
                     <div class="item-row">
-                        <span class="item-icon">${sportIcon}</span>
+                        <span class="item-icon" style="color:${sportColor};font-size:24px;">●</span>
                         <div class="item-info">
                             <div class="item-name">${b.event_name}${b.teams ? ': ' + b.teams : ''}${starBadge}</div>
                             <div class="item-meta">${date} • ${channelNames} • ${sportName}</div>
