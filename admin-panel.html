@@ -784,6 +784,91 @@
         .insert-image-btn {
             margin-top: 8px;
         }
+
+        /* TV-Programm Styles */
+        .tv-subtabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tv-subtab {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            color: #aaa;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .tv-subtab:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .tv-subtab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+        }
+
+        .tv-subtab-content {
+            display: none;
+        }
+
+        .tv-subtab-content.active {
+            display: block;
+        }
+
+        .items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .item-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px 16px;
+            border-radius: 10px;
+            gap: 10px;
+        }
+
+        .item-row:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .item-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .item-name {
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .item-meta {
+            font-size: 0.85rem;
+            color: #888;
+        }
+
+        .item-icon {
+            font-size: 1.5rem;
+            margin-right: 12px;
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 6px;
+        }
     </style>
 </head>
 
@@ -829,6 +914,7 @@
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('articles')">📄 Artikel</button>
             <button class="tab-btn" onclick="switchTab('categories')">🏷️ Kategorien</button>
+            <button class="tab-btn" onclick="switchTab('tvprogram')">📺 TV-Programm</button>
         </div>
 
         <!-- Articles Tab -->
@@ -953,6 +1039,111 @@
                 </div>
             </div>
         </div>
+
+        <!-- TV-Programm Tab -->
+        <div id="tvprogramTab" class="tab-content">
+            <div class="tv-subtabs">
+                <button class="tv-subtab active" onclick="switchTvSubtab('channels')">📡 Sender</button>
+                <button class="tv-subtab" onclick="switchTvSubtab('sporttypes')">🏆 Sportarten</button>
+                <button class="tv-subtab" onclick="switchTvSubtab('broadcasts')">📺 Übertragungen</button>
+            </div>
+
+            <!-- Channels Subtab -->
+            <div id="channelsSubtab" class="tv-subtab-content active">
+                <div class="main-grid">
+                    <div class="card">
+                        <h2>Neuer Sender</h2>
+                        <form id="channelForm">
+                            <div class="form-group">
+                                <label for="channelName">Name *</label>
+                                <input type="text" id="channelName" placeholder="z.B. beIN SPORTS 1" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="channelLogo">Logo-URL</label>
+                                <input type="url" id="channelLogo" placeholder="https://...">
+                            </div>
+                            <button type="submit" class="btn btn-primary">➕ Sender hinzufügen</button>
+                        </form>
+                    </div>
+                    <div class="card">
+                        <h2>Alle Sender</h2>
+                        <div class="items-list" id="channelsList">
+                            <div class="loading">
+                                <div class="spinner"></div>Sender werden geladen...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sport Types Subtab -->
+            <div id="sporttypesSubtab" class="tv-subtab-content">
+                <div class="main-grid">
+                    <div class="card">
+                        <h2>Neue Sportart</h2>
+                        <form id="sportTypeForm">
+                            <div class="form-group">
+                                <label for="sportTypeName">Name *</label>
+                                <input type="text" id="sportTypeName" placeholder="z.B. Fußball" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="sportTypeIcon">Icon (Emoji)</label>
+                                <input type="text" id="sportTypeIcon" placeholder="⚽" maxlength="4">
+                            </div>
+                            <button type="submit" class="btn btn-primary">➕ Sportart hinzufügen</button>
+                        </form>
+                    </div>
+                    <div class="card">
+                        <h2>Alle Sportarten</h2>
+                        <div class="items-list" id="sportTypesList">
+                            <div class="loading">
+                                <div class="spinner"></div>Sportarten werden geladen...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Broadcasts Subtab -->
+            <div id="broadcastsSubtab" class="tv-subtab-content">
+                <div class="main-grid">
+                    <div class="card">
+                        <h2>Neue Übertragung</h2>
+                        <form id="broadcastForm">
+                            <div class="form-group">
+                                <label for="broadcastSportType">Sportart *</label>
+                                <select id="broadcastSportType" required></select>
+                            </div>
+                            <div class="form-group">
+                                <label for="broadcastEventName">Veranstaltung *</label>
+                                <input type="text" id="broadcastEventName" placeholder="z.B. Champions League" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="broadcastTeams">Teams</label>
+                                <input type="text" id="broadcastTeams" placeholder="z.B. Bayern - Real Madrid">
+                            </div>
+                            <div class="form-group">
+                                <label for="broadcastStartTime">Startzeit *</label>
+                                <input type="datetime-local" id="broadcastStartTime" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="broadcastChannel">Sender *</label>
+                                <select id="broadcastChannel" required></select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">➕ Übertragung hinzufügen</button>
+                        </form>
+                    </div>
+                    <div class="card">
+                        <h2>Alle Übertragungen</h2>
+                        <div class="items-list" id="broadcastsList">
+                            <div class="loading">
+                                <div class="spinner"></div>Übertragungen werden geladen...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Edit Article Modal -->
@@ -1064,6 +1255,13 @@
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             event.target.classList.add('active');
             document.getElementById(tabName + 'Tab').classList.add('active');
+
+            // Load TV program data when switching to that tab
+            if (tabName === 'tvprogram') {
+                loadChannels();
+                loadSportTypes();
+                loadBroadcasts();
+            }
         }
 
         // Auth Tab Switch
@@ -1539,6 +1737,227 @@
                 if (error) throw error;
                 showToast('Artikel gelöscht');
                 loadArticles();
+            } catch (error) {
+                showToast('Fehler: ' + error.message, 'error');
+            }
+        }
+
+        // =====================
+        // TV-PROGRAMM FUNCTIONS
+        // =====================
+        let channels = [];
+        let sportTypes = [];
+        let broadcasts = [];
+
+        function switchTvSubtab(tab) {
+            document.querySelectorAll('.tv-subtab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tv-subtab-content').forEach(c => c.classList.remove('active'));
+            document.querySelector(`.tv-subtab[onclick="switchTvSubtab('${tab}')"]`).classList.add('active');
+            document.getElementById(`${tab}Subtab`).classList.add('active');
+        }
+
+        async function loadChannels() {
+            try {
+                const { data, error } = await supabase.from('channels').select('*').order('name');
+                if (error) throw error;
+                channels = data || [];
+                renderChannels();
+                updateChannelSelects();
+            } catch (error) {
+                console.error('Error loading channels:', error);
+                document.getElementById('channelsList').innerHTML = '<div class="empty-state">Fehler beim Laden</div>';
+            }
+        }
+
+        function renderChannels() {
+            const list = document.getElementById('channelsList');
+            if (channels.length === 0) {
+                list.innerHTML = '<div class="empty-state">Keine Sender vorhanden</div>';
+                return;
+            }
+            list.innerHTML = channels.map(ch => `
+                <div class="item-row">
+                    <div class="item-info">
+                        <div class="item-name">${ch.name}</div>
+                        ${ch.logo_url ? `<div class="item-meta">Logo vorhanden</div>` : ''}
+                    </div>
+                    <div class="item-actions">
+                        <button class="btn btn-sm btn-danger" onclick="deleteChannel('${ch.id}')">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateChannelSelects() {
+            const html = channels.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            document.getElementById('broadcastChannel').innerHTML = html;
+        }
+
+        document.getElementById('channelForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('channelName').value.trim();
+            const logo_url = document.getElementById('channelLogo').value.trim() || null;
+
+            try {
+                const { error } = await supabase.from('channels').insert({ name, logo_url });
+                if (error) throw error;
+                showToast('✅ Sender erstellt!');
+                document.getElementById('channelForm').reset();
+                loadChannels();
+            } catch (error) {
+                showToast('Fehler: ' + error.message, 'error');
+            }
+        });
+
+        async function deleteChannel(id) {
+            if (!confirm('Sender wirklich löschen?')) return;
+            try {
+                const { error } = await supabase.from('channels').delete().eq('id', id);
+                if (error) throw error;
+                showToast('Sender gelöscht');
+                loadChannels();
+            } catch (error) {
+                showToast('Fehler: ' + error.message, 'error');
+            }
+        }
+
+        async function loadSportTypes() {
+            try {
+                const { data, error } = await supabase.from('sport_types').select('*').order('name');
+                if (error) throw error;
+                sportTypes = data || [];
+                renderSportTypes();
+                updateSportTypeSelects();
+            } catch (error) {
+                console.error('Error loading sport types:', error);
+                document.getElementById('sportTypesList').innerHTML = '<div class="empty-state">Fehler beim Laden</div>';
+            }
+        }
+
+        function renderSportTypes() {
+            const list = document.getElementById('sportTypesList');
+            if (sportTypes.length === 0) {
+                list.innerHTML = '<div class="empty-state">Keine Sportarten vorhanden</div>';
+                return;
+            }
+            list.innerHTML = sportTypes.map(st => `
+                <div class="item-row">
+                    <span class="item-icon">${st.icon || '🏆'}</span>
+                    <div class="item-info">
+                        <div class="item-name">${st.name}</div>
+                    </div>
+                    <div class="item-actions">
+                        <button class="btn btn-sm btn-danger" onclick="deleteSportType('${st.id}')">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateSportTypeSelects() {
+            const html = sportTypes.map(s => `<option value="${s.id}">${s.icon || '🏆'} ${s.name}</option>`).join('');
+            document.getElementById('broadcastSportType').innerHTML = html;
+        }
+
+        document.getElementById('sportTypeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('sportTypeName').value.trim();
+            const icon = document.getElementById('sportTypeIcon').value.trim() || '🏆';
+
+            try {
+                const { error } = await supabase.from('sport_types').insert({ name, icon });
+                if (error) throw error;
+                showToast('✅ Sportart erstellt!');
+                document.getElementById('sportTypeForm').reset();
+                loadSportTypes();
+            } catch (error) {
+                showToast('Fehler: ' + error.message, 'error');
+            }
+        });
+
+        async function deleteSportType(id) {
+            if (!confirm('Sportart wirklich löschen?')) return;
+            try {
+                const { error } = await supabase.from('sport_types').delete().eq('id', id);
+                if (error) throw error;
+                showToast('Sportart gelöscht');
+                loadSportTypes();
+            } catch (error) {
+                showToast('Fehler: ' + error.message, 'error');
+            }
+        }
+
+        async function loadBroadcasts() {
+            try {
+                const { data, error } = await supabase
+                    .from('broadcasts')
+                    .select('*, channels(name), sport_types(name, icon)')
+                    .order('start_time', { ascending: true });
+                if (error) throw error;
+                broadcasts = data || [];
+                renderBroadcasts();
+            } catch (error) {
+                console.error('Error loading broadcasts:', error);
+                document.getElementById('broadcastsList').innerHTML = '<div class="empty-state">Fehler beim Laden</div>';
+            }
+        }
+
+        function renderBroadcasts() {
+            const list = document.getElementById('broadcastsList');
+            if (broadcasts.length === 0) {
+                list.innerHTML = '<div class="empty-state">Keine Übertragungen vorhanden</div>';
+                return;
+            }
+            list.innerHTML = broadcasts.map(b => {
+                const date = new Date(b.start_time).toLocaleString('de-DE', {
+                    day: '2-digit', month: '2-digit', year: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                });
+                const sportIcon = b.sport_types?.icon || '🏆';
+                const sportName = b.sport_types?.name || '';
+                const channelName = b.channels?.name || '';
+                return `
+                    <div class="item-row">
+                        <span class="item-icon">${sportIcon}</span>
+                        <div class="item-info">
+                            <div class="item-name">${b.event_name}${b.teams ? ': ' + b.teams : ''}</div>
+                            <div class="item-meta">${date} • ${channelName} • ${sportName}</div>
+                        </div>
+                        <div class="item-actions">
+                            <button class="btn btn-sm btn-danger" onclick="deleteBroadcast('${b.id}')">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        document.getElementById('broadcastForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const sport_type_id = document.getElementById('broadcastSportType').value;
+            const event_name = document.getElementById('broadcastEventName').value.trim();
+            const teams = document.getElementById('broadcastTeams').value.trim() || null;
+            const start_time = document.getElementById('broadcastStartTime').value;
+            const channel_id = document.getElementById('broadcastChannel').value;
+
+            try {
+                const { error } = await supabase.from('broadcasts').insert({
+                    sport_type_id, event_name, teams, start_time, channel_id
+                });
+                if (error) throw error;
+                showToast('✅ Übertragung erstellt!');
+                document.getElementById('broadcastForm').reset();
+                loadBroadcasts();
+            } catch (error) {
+                showToast('Fehler: ' + error.message, 'error');
+            }
+        });
+
+        async function deleteBroadcast(id) {
+            if (!confirm('Übertragung wirklich löschen?')) return;
+            try {
+                const { error } = await supabase.from('broadcasts').delete().eq('id', id);
+                if (error) throw error;
+                showToast('Übertragung gelöscht');
+                loadBroadcasts();
             } catch (error) {
                 showToast('Fehler: ' + error.message, 'error');
             }
