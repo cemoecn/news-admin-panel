@@ -979,26 +979,34 @@
         .channel-checkbox {
             display: flex;
             align-items: center;
-            gap: 6px;
-            background: rgba(255, 255, 255, 0.08);
-            padding: 8px 12px;
+            gap: 12px;
+            padding: 12px 14px;
             border-radius: var(--radius-sm);
             cursor: pointer;
-            transition: all 0.2s;
-            font-size: 0.875rem;
+            transition: background 0.2s;
+            background: transparent;
         }
 
         .channel-checkbox:hover {
-            background: rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .channel-checkbox input {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .channel-checkbox span {
+            color: var(--text-primary);
+            font-size: 0.95rem;
         }
 
         .channel-checkbox input:checked+span {
             color: var(--accent);
-            font-weight: 600;
-        }
-
-        .channel-checkbox input {
-            accent-color: var(--accent);
+            font-weight: 500;
         }
 
         /* Mobile Optimizations */
