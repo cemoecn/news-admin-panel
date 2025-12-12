@@ -1176,6 +1176,7 @@
             <button class="tab-btn active" onclick="switchTab('articles')">📄 Artikel</button>
             <button class="tab-btn" onclick="switchTab('categories')">🏷️ Kategorien</button>
             <button class="tab-btn" onclick="switchTab('tvprogram')">📺 TV-Programm</button>
+            <button class="tab-btn" onclick="switchTab('football')">⚽ Fußball</button>
         </div>
 
         <!-- Articles Tab -->
@@ -1421,7 +1422,85 @@
         </div>
     </div>
 
+    <!-- Football Tab -->
+    <div id="footballTab" class="tab-content">
+        <div class="tv-subtabs">
+            <button class="tv-subtab active" onclick="switchFootballSubtab('teams')">🏟️ Teams</button>
+            <button class="tv-subtab" onclick="switchFootballSubtab('leagues')">🏆 Ligen</button>
+            <button class="tv-subtab" onclick="switchFootballSubtab('sync')">🔄 Sync</button>
+        </div>
+
+        <!-- Teams Subtab -->
+        <div id="teamsSubtab" class="tv-subtab-content active">
+            <div class="card">
+                <h2>Teams bearbeiten</h2>
+                <div class="form-group">
+                    <input type="text" id="teamSearch" placeholder="🔍 Team suchen..." oninput="filterTeams()">
+                </div>
+                <div class="stats">
+                    <div class="stat-box">
+                        <div class="stat-number" id="teamCount">-</div>
+                        <div class="stat-label">Teams</div>
+                    </div>
+                </div>
+                <div class="items-list" id="footballTeamsList">
+                    <div class="loading">
+                        <div class="spinner"></div>Teams werden geladen...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leagues Subtab -->
+        <div id="leaguesSubtab" class="tv-subtab-content">
+            <div class="card">
+                <h2>Ligen bearbeiten</h2>
+                <div class="stats">
+                    <div class="stat-box">
+                        <div class="stat-number" id="leagueCount">-</div>
+                        <div class="stat-label">Ligen</div>
+                    </div>
+                </div>
+                <div class="items-list" id="footballLeaguesList">
+                    <div class="loading">
+                        <div class="spinner"></div>Ligen werden geladen...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sync Subtab -->
+        <div id="syncSubtab" class="tv-subtab-content">
+            <div class="card">
+                <h2>🔄 Daten synchronisieren</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                    Hier kannst du die Fußballdaten von API-Football aktualisieren.
+                </p>
+                <div class="sync-buttons" style="display: flex; flex-direction: column; gap: 12px;">
+                    <button class="btn btn-primary" onclick="syncFootballData('standings')" id="syncStandingsBtn">
+                        📊 Tabellen synchronisieren
+                    </button>
+                    <button class="btn btn-primary" onclick="syncFootballData('fixtures')" id="syncFixturesBtn">
+                        ⚽ Spiele synchronisieren
+                    </button>
+                </div>
+                <div id="syncStatus"
+                    style="margin-top: 20px; padding: 16px; background: rgba(255,255,255,0.05); border-radius: 8px; display: none;">
+                    <div class="spinner" style="display: inline-block; margin-right: 10px;"></div>
+                    <span id="syncStatusText">Synchronisiere...</span>
+                </div>
+                <div id="syncLog" style="margin-top: 20px; max-height: 300px; overflow-y: auto;">
+                    <h3 style="margin-bottom: 12px;">Letzte Synchronisierungen</h3>
+                    <div id="syncLogList">
+                        <p style="color: var(--text-secondary);">Noch keine Synchronisierungen</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Edit Article Modal -->
+
     <div class="modal-overlay" id="editModal">
         <div class="modal">
             <div class="modal-header">
@@ -1587,6 +1666,11 @@
                 loadChannels();
                 loadSportTypes();
                 loadBroadcasts();
+            }
+            // Load Football data when switching to that tab
+            if (tabName === 'football') {
+                loadFootballTeams();
+                loadFootballLeagues();
             }
         }
 
@@ -2417,7 +2501,214 @@
                 closeEditBroadcastModal();
             }
         });
+
+        // =============================================
+        // FOOTBALL MANAGEMENT FUNCTIONS
+        // =============================================
+
+        let allFootballTeams = [];
+
+        function switchFootballSubtab(subtabName) {
+            document.querySelectorAll('#footballTab .tv-subtab').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('#footballTab .tv-subtab-content').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(subtabName + 'Subtab').classList.add('active');
+        }
+
+        async function loadFootballTeams() {
+            const list = document.getElementById('footballTeamsList');
+            try {
+                const { data, error } = await supabase
+                    .from('football_teams')
+                    .select('*')
+                    .order('name');
+
+                if (error) throw error;
+                allFootballTeams = data || [];
+                document.getElementById('teamCount').textContent = allFootballTeams.length;
+                renderTeamsList(allFootballTeams);
+            } catch (error) {
+                list.innerHTML = `<p style="color: var(--danger)">Fehler: ${error.message}</p>`;
+            }
+        }
+
+        function renderTeamsList(teams) {
+            const list = document.getElementById('footballTeamsList');
+            if (teams.length === 0) {
+                list.innerHTML = '<p style="color: var(--text-secondary)">Keine Teams gefunden</p>';
+                return;
+            }
+
+            list.innerHTML = teams.map(team => `
+                <div class="item-row" id="team-${team.id}">
+                    <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
+                        ${team.logo_url ? `<img src="${team.logo_url}" style="width: 32px; height: 32px; object-fit: contain;">` : ''}
+                        <div style="flex: 1;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                <strong style="color: var(--text-primary)">${team.display_name || team.name}</strong>
+                                ${team.display_name ? `<span style="color: var(--text-muted); font-size: 0.8rem;">(API: ${team.name})</span>` : ''}
+                                ${team.is_locked ? '<span style="color: var(--success); font-size: 0.75rem;">🔒 Gesperrt</span>' : ''}
+                            </div>
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                <input type="text" 
+                                    id="team-display-${team.id}" 
+                                    placeholder="Display-Name" 
+                                    value="${team.display_name || ''}" 
+                                    style="padding: 4px 8px; font-size: 0.85rem; width: 150px;">
+                                <input type="text" 
+                                    id="team-short-${team.id}" 
+                                    placeholder="Kurzname" 
+                                    value="${team.short_name || ''}" 
+                                    style="padding: 4px 8px; font-size: 0.85rem; width: 80px;">
+                                <label style="display: flex; align-items: center; gap: 4px; font-size: 0.85rem; color: var(--text-secondary);">
+                                    <input type="checkbox" id="team-lock-${team.id}" ${team.is_locked ? 'checked' : ''}>
+                                    Sperren
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" onclick="saveTeam(${team.id})" style="margin-left: 12px;">
+                        💾 Speichern
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function filterTeams() {
+            const query = document.getElementById('teamSearch').value.toLowerCase();
+            const filtered = allFootballTeams.filter(team =>
+                team.name.toLowerCase().includes(query) ||
+                (team.display_name && team.display_name.toLowerCase().includes(query)) ||
+                (team.short_name && team.short_name.toLowerCase().includes(query))
+            );
+            renderTeamsList(filtered);
+        }
+
+        async function saveTeam(teamId) {
+            const displayName = document.getElementById(`team-display-${teamId}`).value.trim() || null;
+            const shortName = document.getElementById(`team-short-${teamId}`).value.trim() || null;
+            const isLocked = document.getElementById(`team-lock-${teamId}`).checked;
+
+            try {
+                const { error } = await supabase
+                    .from('football_teams')
+                    .update({
+                        display_name: displayName,
+                        short_name: shortName,
+                        is_locked: isLocked,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', teamId);
+
+                if (error) throw error;
+                showToast('✅ Team gespeichert!');
+                loadFootballTeams();
+            } catch (error) {
+                showToast('Fehler: ' + error.message, 'error');
+            }
+        }
+
+        async function loadFootballLeagues() {
+            const list = document.getElementById('footballLeaguesList');
+            try {
+                const { data, error } = await supabase
+                    .from('football_leagues')
+                    .select('*')
+                    .order('id');
+
+                if (error) throw error;
+                document.getElementById('leagueCount').textContent = data?.length || 0;
+
+                if (!data || data.length === 0) {
+                    list.innerHTML = '<p style="color: var(--text-secondary)">Keine Ligen gefunden</p>';
+                    return;
+                }
+
+                list.innerHTML = data.map(league => `
+                    <div class="item-row" id="league-${league.id}">
+                        <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
+                            ${league.logo_url ? `<img src="${league.logo_url}" style="width: 32px; height: 32px; object-fit: contain;">` : ''}
+                            <div style="flex: 1;">
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                    <strong style="color: var(--text-primary)">${league.display_name || league.name}</strong>
+                                    <span style="color: var(--text-muted); font-size: 0.8rem;">${league.country || ''}</span>
+                                    ${league.is_locked ? '<span style="color: var(--success); font-size: 0.75rem;">🔒</span>' : ''}
+                                </div>
+                                <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                                    <input type="text" 
+                                        id="league-display-${league.id}" 
+                                        placeholder="Display-Name" 
+                                        value="${league.display_name || ''}" 
+                                        style="padding: 4px 8px; font-size: 0.85rem; width: 180px;">
+                                    <label style="display: flex; align-items: center; gap: 4px; font-size: 0.85rem; color: var(--text-secondary);">
+                                        <input type="checkbox" id="league-active-${league.id}" ${league.is_active ? 'checked' : ''}>
+                                        Aktiv
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 4px; font-size: 0.85rem; color: var(--text-secondary);">
+                                        <input type="checkbox" id="league-lock-${league.id}" ${league.is_locked ? 'checked' : ''}>
+                                        Sperren
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn btn-secondary btn-sm" onclick="saveLeague(${league.id})" style="margin-left: 12px;">
+                            💾 Speichern
+                        </button>
+                    </div>
+                `).join('');
+            } catch (error) {
+                list.innerHTML = `<p style="color: var(--danger)">Fehler: ${error.message}</p>`;
+            }
+        }
+
+        async function saveLeague(leagueId) {
+            const displayName = document.getElementById(`league-display-${leagueId}`).value.trim() || null;
+            const isActive = document.getElementById(`league-active-${leagueId}`).checked;
+            const isLocked = document.getElementById(`league-lock-${leagueId}`).checked;
+
+            try {
+                const { error } = await supabase
+                    .from('football_leagues')
+                    .update({
+                        display_name: displayName,
+                        is_active: isActive,
+                        is_locked: isLocked
+                    })
+                    .eq('id', leagueId);
+
+                if (error) throw error;
+                showToast('✅ Liga gespeichert!');
+                loadFootballLeagues();
+            } catch (error) {
+                showToast('Fehler: ' + error.message, 'error');
+            }
+        }
+
+        async function syncFootballData(type) {
+            const statusDiv = document.getElementById('syncStatus');
+            const statusText = document.getElementById('syncStatusText');
+            const btn = document.getElementById(type === 'standings' ? 'syncStandingsBtn' : 'syncFixturesBtn');
+
+            statusDiv.style.display = 'block';
+            btn.disabled = true;
+            statusText.textContent = `Synchronisiere ${type === 'standings' ? 'Tabellen' : 'Spiele'}...`;
+
+            try {
+                // Note: This would ideally call a Supabase Edge Function
+                // For now, show info message
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                statusText.textContent = '⚠️ Bitte führe das Sync-Script manuell aus: node sync-football.js';
+                statusDiv.style.display = 'block';
+                showToast('ℹ️ Führe sync-football.js aus um Daten zu synchronisieren', 'info');
+            } catch (error) {
+                statusText.textContent = 'Fehler: ' + error.message;
+                showToast('Fehler beim Synchronisieren', 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        }
     </script>
+
 </body>
 
 </html>

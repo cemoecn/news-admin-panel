@@ -13,6 +13,12 @@ CREATE TABLE IF NOT EXISTS broadcast_channels (
 -- Migration für bestehende Datenbanken:
 -- ALTER TABLE sport_types ADD COLUMN IF NOT EXISTS color TEXT DEFAULT '#667eea';
 -- ALTER TABLE sport_types DROP COLUMN IF EXISTS icon;
+
+-- Sportart löschen ohne Spiele zu löschen (SET NULL statt CASCADE):
+-- ALTER TABLE broadcasts DROP CONSTRAINT broadcasts_sport_type_id_fkey;
+-- ALTER TABLE broadcasts ADD CONSTRAINT broadcasts_sport_type_id_fkey 
+--     FOREIGN KEY (sport_type_id) REFERENCES sport_types(id) ON DELETE SET NULL;
+
 -- Index für schnellere Abfragen
 CREATE INDEX IF NOT EXISTS idx_broadcast_channels_broadcast ON broadcast_channels(broadcast_id);
 CREATE INDEX IF NOT EXISTS idx_broadcast_channels_channel ON broadcast_channels(channel_id);
