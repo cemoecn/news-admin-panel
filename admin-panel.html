@@ -925,11 +925,53 @@
             gap: 6px;
         }
 
-        .channels-checkboxes {
+        /* Collapsible Channel Selector */
+        .channel-selector {
+            margin-top: 8px;
+        }
+
+        .channel-selector-trigger {
             display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-secondary);
+        }
+
+        .channel-selector-trigger:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .channel-selector-trigger.has-selection {
+            color: var(--text-primary);
+        }
+
+        .channel-selector-arrow {
+            transition: transform 0.2s;
+        }
+
+        .channel-selector.open .channel-selector-arrow {
+            transform: rotate(180deg);
+        }
+
+        .channels-checkboxes {
+            display: none;
             flex-wrap: wrap;
             gap: 8px;
             margin-top: 8px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+        }
+
+        .channel-selector.open .channels-checkboxes {
+            display: flex;
         }
 
         .channel-checkbox {
@@ -938,9 +980,10 @@
             gap: 6px;
             background: rgba(255, 255, 255, 0.08);
             padding: 8px 12px;
-            border-radius: 8px;
+            border-radius: var(--radius-sm);
             cursor: pointer;
             transition: all 0.2s;
+            font-size: 0.875rem;
         }
 
         .channel-checkbox:hover {
@@ -948,11 +991,112 @@
         }
 
         .channel-checkbox input:checked+span {
-            color: #667eea;
+            color: var(--accent);
+            font-weight: 600;
         }
 
         .channel-checkbox input {
-            accent-color: #667eea;
+            accent-color: var(--accent);
+        }
+
+        /* Mobile Optimizations */
+        @media (max-width: 768px) {
+            .container {
+                padding: 16px 12px;
+            }
+
+            header {
+                flex-direction: column;
+                gap: 16px;
+                text-align: center;
+            }
+
+            header h1 {
+                font-size: 1.4rem;
+            }
+
+            .tabs {
+                width: 100%;
+                overflow-x: auto;
+            }
+
+            .tab-btn {
+                padding: 12px 16px;
+                font-size: 0.85rem;
+                white-space: nowrap;
+            }
+
+            .main-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .card {
+                padding: 16px;
+            }
+
+            .card h2 {
+                font-size: 1rem;
+                margin-bottom: 16px;
+            }
+
+            .form-group {
+                margin-bottom: 14px;
+            }
+
+            label {
+                font-size: 0.8rem;
+            }
+
+            input,
+            textarea,
+            select {
+                padding: 12px 14px;
+                font-size: 16px;
+                /* Prevents iOS zoom */
+            }
+
+            textarea {
+                min-height: 100px;
+            }
+
+            textarea.content-area {
+                min-height: 150px;
+            }
+
+            .btn {
+                padding: 14px 20px;
+                font-size: 0.9rem;
+                width: 100%;
+            }
+
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+
+            .article-item,
+            .category-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .article-item:hover .article-actions,
+            .category-item:hover .category-actions {
+                opacity: 1;
+            }
+
+            .article-actions,
+            .category-actions {
+                opacity: 1;
+                width: 100%;
+            }
+
+            .article-actions .btn,
+            .category-actions .btn {
+                flex: 1;
+            }
         }
 
         .btn-edit {
@@ -1217,13 +1361,20 @@
                             </div>
                             <div class="form-group">
                                 <label>Sender * (mehrere auswählbar)</label>
-                                <div id="broadcastChannelsCheckboxes" class="channels-checkboxes"></div>
+                                <div class="channel-selector" id="channelSelector">
+                                    <div class="channel-selector-trigger"
+                                        onclick="toggleChannelSelector('channelSelector')">
+                                        <span id="channelSelectorText">Sender auswählen...</span>
+                                        <span class="channel-selector-arrow">▼</span>
+                                    </div>
+                                    <div id="broadcastChannelsCheckboxes" class="channels-checkboxes"></div>
+                                </div>
                             </div>
                             <div class="form-group live-toggle">
                                 <label class="toggle-label">
                                     <input type="checkbox" id="broadcastGameOfDay">
                                     <span class="toggle-switch"></span>
-                                    <span class="toggle-text">⭐ Spiel des Tages</span>
+                                    <span class="toggle-text">Spiel des Tages</span>
                                 </label>
                             </div>
                             <button type="submit" class="btn btn-primary">➕ Übertragung hinzufügen</button>
@@ -1354,13 +1505,19 @@
                 </div>
                 <div class="form-group">
                     <label>Sender * (mehrere auswählbar)</label>
-                    <div id="editBroadcastChannelsCheckboxes" class="channels-checkboxes"></div>
+                    <div class="channel-selector" id="editChannelSelector">
+                        <div class="channel-selector-trigger" onclick="toggleChannelSelector('editChannelSelector')">
+                            <span id="editChannelSelectorText">Sender auswählen...</span>
+                            <span class="channel-selector-arrow">▼</span>
+                        </div>
+                        <div id="editBroadcastChannelsCheckboxes" class="channels-checkboxes"></div>
+                    </div>
                 </div>
                 <div class="form-group live-toggle">
                     <label class="toggle-label">
                         <input type="checkbox" id="editBroadcastGameOfDay">
                         <span class="toggle-switch"></span>
-                        <span class="toggle-text">⭐ Spiel des Tages</span>
+                        <span class="toggle-text">Spiel des Tages</span>
                     </label>
                 </div>
                 <div class="modal-actions">
@@ -1402,6 +1559,26 @@
                 loadChannels();
                 loadSportTypes();
                 loadBroadcasts();
+            }
+        }
+
+        // Toggle Channel Selector Dropdown
+        function toggleChannelSelector(selectorId) {
+            const selector = document.getElementById(selectorId);
+            selector.classList.toggle('open');
+        }
+
+        // Update channel selector text based on selections
+        function updateChannelSelectorText(checkboxContainerId, textElementId) {
+            const checkboxes = document.querySelectorAll(`#${checkboxContainerId} input:checked`);
+            const textEl = document.getElementById(textElementId);
+            if (checkboxes.length === 0) {
+                textEl.textContent = 'Sender auswählen...';
+                textEl.parentElement.classList.remove('has-selection');
+            } else {
+                const names = Array.from(checkboxes).map(cb => cb.nextElementSibling.textContent);
+                textEl.textContent = names.join(', ');
+                textEl.parentElement.classList.add('has-selection');
             }
         }
 
