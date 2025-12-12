@@ -961,13 +961,15 @@
 
         .channels-checkboxes {
             display: none;
-            flex-wrap: wrap;
-            gap: 8px;
+            flex-direction: column;
+            gap: 4px;
             margin-top: 8px;
-            padding: 12px;
+            padding: 8px;
             background: rgba(255, 255, 255, 0.03);
             border-radius: var(--radius-sm);
             border: 1px solid var(--border);
+            max-height: 200px;
+            overflow-y: auto;
         }
 
         .channel-selector.open .channels-checkboxes {
