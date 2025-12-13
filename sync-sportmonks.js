@@ -120,72 +120,82 @@ async function syncLeagueStandings(league) {
     }
 }
 
-async function syncLeagueFixtures(league) {
-    console.log(`\n⚽ Syncing fixtures for ${league.name}...`);
+async function syncAllFixtures() {
+    console.log(`\n⚽ Syncing fixtures for all leagues...`);
 
-    const today = new Date().toISOString().split('T')[0];
-    const nextWeek = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    // Get league IDs for filter
+    const leagueIds = LEAGUES_TO_SYNC.map(l => l.id).join(',');
 
-    const fixtures = await callSportmonks(`/fixtures/between/${today}/${nextWeek}`, {
-        include: 'participants;scores',
-        'filter[league_ids]': league.id
-    });
+    // Sync fixtures for the next 14 days
+    let totalFixtures = 0;
 
-    if (!fixtures || fixtures.length === 0) {
-        console.log(`   ⚠️ No fixtures found`);
-        return;
+    for (let dayOffset = 0; dayOffset <= 14; dayOffset++) {
+        const date = new Date(Date.now() + dayOffset * 24 * 60 * 60 * 1000);
+        const dateStr = date.toISOString().split('T')[0];
+
+        try {
+            const fixtures = await callSportmonks(`/fixtures/date/${dateStr}`, {
+                include: 'participants;state;scores',
+                'filters': `fixtureLeagues:${leagueIds}`
+            });
+
+            if (!fixtures || fixtures.length === 0) continue;
+
+            for (const fixture of fixtures) {
+                const homeTeam = fixture.participants?.find(p => p.meta?.location === 'home');
+                const awayTeam = fixture.participants?.find(p => p.meta?.location === 'away');
+
+                if (!homeTeam || !awayTeam) continue;
+
+                // Upsert teams
+                await supabaseRequest('football_teams', 'POST', {
+                    id: homeTeam.id,
+                    name: homeTeam.name,
+                    logo_url: homeTeam.image_path
+                });
+                await supabaseRequest('football_teams', 'POST', {
+                    id: awayTeam.id,
+                    name: awayTeam.name,
+                    logo_url: awayTeam.image_path
+                });
+
+                // Get scores
+                const homeScore = fixture.scores?.find(s => s.description === 'CURRENT' && s.score?.participant === 'home')?.score?.goals;
+                const awayScore = fixture.scores?.find(s => s.description === 'CURRENT' && s.score?.participant === 'away')?.score?.goals;
+
+                // Determine if live
+                const liveStates = ['LIVE', 'HT', '1H', '2H', 'ET', 'PEN_LIVE'];
+                const isLive = liveStates.includes(fixture.state?.state);
+
+                // Upsert fixture
+                await supabaseRequest('football_fixtures', 'POST', {
+                    id: fixture.id,
+                    league_id: fixture.league_id,
+                    season: 2025,
+                    round: fixture.round_id?.toString() || '',
+                    home_team_id: homeTeam.id,
+                    away_team_id: awayTeam.id,
+                    kickoff: fixture.starting_at,
+                    status_short: fixture.state?.short_name || 'NS',
+                    status_long: fixture.state?.state || 'Not Started',
+                    elapsed: fixture.state?.clock?.minute || 0,
+                    home_score: homeScore ?? null,
+                    away_score: awayScore ?? null,
+                    venue: fixture.venue?.name || null,
+                    is_live: isLive,
+                    updated_at: new Date().toISOString()
+                });
+
+                const matchDate = new Date(fixture.starting_at).toLocaleDateString('de-DE');
+                console.log(`   ✓ ${matchDate}: ${homeTeam.name} vs ${awayTeam.name}`);
+                totalFixtures++;
+            }
+        } catch (err) {
+            // Skip days with no fixtures quietly
+        }
     }
 
-    console.log(`   📅 Found ${fixtures.length} fixtures`);
-
-    for (const fixture of fixtures) {
-        const homeTeam = fixture.participants?.find(p => p.meta?.location === 'home');
-        const awayTeam = fixture.participants?.find(p => p.meta?.location === 'away');
-
-        if (!homeTeam || !awayTeam) continue;
-
-        // Upsert teams
-        await supabaseRequest('football_teams', 'POST', {
-            id: homeTeam.id,
-            name: homeTeam.name,
-            logo_url: homeTeam.image_path
-        });
-        await supabaseRequest('football_teams', 'POST', {
-            id: awayTeam.id,
-            name: awayTeam.name,
-            logo_url: awayTeam.image_path
-        });
-
-        // Get scores
-        const homeScore = fixture.scores?.find(s => s.description === 'CURRENT' && s.score?.participant === 'home')?.score?.goals;
-        const awayScore = fixture.scores?.find(s => s.description === 'CURRENT' && s.score?.participant === 'away')?.score?.goals;
-
-        // Determine if live
-        const liveStates = ['LIVE', 'HT', '1H', '2H', 'ET', 'PEN_LIVE'];
-        const isLive = liveStates.includes(fixture.state?.state);
-
-        // Upsert fixture
-        await supabaseRequest('football_fixtures', 'POST', {
-            id: fixture.id,
-            league_id: league.id,
-            season: 2025,
-            round: fixture.round_id?.toString() || '',
-            home_team_id: homeTeam.id,
-            away_team_id: awayTeam.id,
-            kickoff: fixture.starting_at,
-            status_short: fixture.state?.short_name || 'NS',
-            status_long: fixture.state?.state || 'Not Started',
-            elapsed: fixture.state?.clock?.minute || 0,
-            home_score: homeScore ?? null,
-            away_score: awayScore ?? null,
-            venue: fixture.venue?.name || null,
-            is_live: isLive,
-            updated_at: new Date().toISOString()
-        });
-
-        const date = new Date(fixture.starting_at).toLocaleDateString('de-DE');
-        console.log(`   ✓ ${date}: ${homeTeam.name} vs ${awayTeam.name}`);
-    }
+    console.log(`   📅 Total: ${totalFixtures} fixtures synced`);
 }
 
 async function main() {
@@ -199,13 +209,13 @@ async function main() {
     console.log(`\n📊 Sync type: ${syncType}\n`);
 
     try {
-        for (const league of LEAGUES_TO_SYNC) {
-            if (syncType === 'standings' || syncType === 'all') {
+        if (syncType === 'standings' || syncType === 'all') {
+            for (const league of LEAGUES_TO_SYNC) {
                 await syncLeagueStandings(league);
             }
-            if (syncType === 'fixtures' || syncType === 'all') {
-                await syncLeagueFixtures(league);
-            }
+        }
+        if (syncType === 'fixtures' || syncType === 'all') {
+            await syncAllFixtures();
         }
 
         console.log('\n✅ Sync completed successfully!');
