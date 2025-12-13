@@ -2542,33 +2542,41 @@
             list.innerHTML = teams.map(team => `
                 <div class="item-row" id="team-${team.id}">
                     <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
-                        ${team.logo_url ? `<img src="${team.logo_url}" style="width: 32px; height: 32px; object-fit: contain;">` : ''}
+                        <div style="position: relative;">
+                            <img src="${team.custom_logo_url || team.logo_url || ''}" style="width: 40px; height: 40px; object-fit: contain; background: rgba(255,255,255,0.05); border-radius: 4px;">
+                            ${team.custom_logo_url ? '<span style="position: absolute; top: -4px; right: -4px; font-size: 10px;">✏️</span>' : ''}
+                        </div>
                         <div style="flex: 1;">
                             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
                                 <strong style="color: var(--text-primary)">${team.display_name || team.name}</strong>
                                 ${team.display_name ? `<span style="color: var(--text-muted); font-size: 0.8rem;">(API: ${team.name})</span>` : ''}
-                                ${team.is_locked ? '<span style="color: var(--success); font-size: 0.75rem;">🔒 Gesperrt</span>' : ''}
+                                ${team.is_locked ? '<span style="color: var(--success); font-size: 0.75rem;">🔒</span>' : ''}
                             </div>
-                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                                 <input type="text" 
                                     id="team-display-${team.id}" 
                                     placeholder="Display-Name" 
                                     value="${team.display_name || ''}" 
-                                    style="padding: 4px 8px; font-size: 0.85rem; width: 150px;">
+                                    style="padding: 4px 8px; font-size: 0.85rem; width: 120px;">
                                 <input type="text" 
                                     id="team-short-${team.id}" 
                                     placeholder="Kurzname" 
                                     value="${team.short_name || ''}" 
-                                    style="padding: 4px 8px; font-size: 0.85rem; width: 80px;">
+                                    style="padding: 4px 8px; font-size: 0.85rem; width: 70px;">
+                                <input type="url" 
+                                    id="team-logo-${team.id}" 
+                                    placeholder="🖼️ Logo-URL" 
+                                    value="${team.custom_logo_url || ''}" 
+                                    style="padding: 4px 8px; font-size: 0.85rem; width: 150px;">
                                 <label style="display: flex; align-items: center; gap: 4px; font-size: 0.85rem; color: var(--text-secondary);">
                                     <input type="checkbox" id="team-lock-${team.id}" ${team.is_locked ? 'checked' : ''}>
-                                    Sperren
+                                    🔒
                                 </label>
                             </div>
                         </div>
                     </div>
                     <button class="btn btn-secondary btn-sm" onclick="saveTeam(${team.id})" style="margin-left: 12px;">
-                        💾 Speichern
+                        💾
                     </button>
                 </div>
             `).join('');
@@ -2587,6 +2595,7 @@
         async function saveTeam(teamId) {
             const displayName = document.getElementById(`team-display-${teamId}`).value.trim() || null;
             const shortName = document.getElementById(`team-short-${teamId}`).value.trim() || null;
+            const customLogoUrl = document.getElementById(`team-logo-${teamId}`).value.trim() || null;
             const isLocked = document.getElementById(`team-lock-${teamId}`).checked;
 
             try {
@@ -2595,6 +2604,7 @@
                     .update({
                         display_name: displayName,
                         short_name: shortName,
+                        custom_logo_url: customLogoUrl,
                         is_locked: isLocked,
                         updated_at: new Date().toISOString()
                     })
